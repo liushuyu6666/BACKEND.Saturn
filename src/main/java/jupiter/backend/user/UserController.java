@@ -1,15 +1,10 @@
-package jupiter.backend.controller;
+package jupiter.backend.user;
 
 
-import io.jsonwebtoken.Claims;
-import jupiter.backend.core.JWT;
-import jupiter.backend.model.loginrequest.LoginRequest;
-import jupiter.backend.model.loginrequest.LoginRequestBody;
-import jupiter.backend.model.user.User;
-import jupiter.backend.model.user.UserDetail;
-import jupiter.backend.model.user.UserService;
+import jupiter.backend.jwt.JWT;
+import jupiter.backend.loginrequest.LoginRequest;
+import jupiter.backend.loginrequest.LoginRequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jupiter.backend.response.ResponseBody;

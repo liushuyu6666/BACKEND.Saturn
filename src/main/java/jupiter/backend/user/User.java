@@ -1,4 +1,4 @@
-package jupiter.backend.model.user;
+package jupiter.backend.user;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "user")
 public class User {
 
-    @Id
     private String username;
 
     private String password;
