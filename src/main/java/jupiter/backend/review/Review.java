@@ -9,15 +9,15 @@ public class Review {
 
     private String user;
 
+    private String content;
+
+    private Integer stars;
+
     @LastModifiedDate
     private Date createAt;
 
     @CreatedDate
     private Date modifiedAt;
-
-    private String content;
-
-    private Integer stars;
 
     public Review() {
     }

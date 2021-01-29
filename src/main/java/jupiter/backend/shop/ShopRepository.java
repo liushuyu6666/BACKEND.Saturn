@@ -1,6 +1,7 @@
 package jupiter.backend.shop;
 
 import jupiter.backend.dish.Dish;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -26,5 +27,16 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
     // find shop by id
     @Query(value = "{'_id': ?0}")
     Shop findBy_id(String id);
+
+    @Query(value = "{'_id': ?0, 'dishes.name': ?1}")
+    Shop findShopBy_idAndDishName(String id, String dishName);
+
+    // find a specific dish by shop id and dish id
+    @Query(value = "{'_id': ?0, 'dishes._id': ?1}")
+    Shop findShopBy_idAndDish_id(String id, String dishId);
+
+    @Query(value = "{'_id' : ?0, 'dishes._id': ?1}", fields = "{'dishes': 1}")
+    Shop findDishBy_idAndDish_id(String id, String dishId);
+
 
 }

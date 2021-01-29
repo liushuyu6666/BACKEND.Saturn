@@ -2,7 +2,6 @@ package jupiter.backend.dish;
 
 
 import jupiter.backend.review.Review;
-import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -40,6 +39,10 @@ public class Dish {
     public void set_id() {
         Date now = new Date();
         this._id = Long.toString(now.getTime());
+    }
+
+    public void set_id(String specifiedId) {
+        this._id = specifiedId;
     }
 
     public String getName() {

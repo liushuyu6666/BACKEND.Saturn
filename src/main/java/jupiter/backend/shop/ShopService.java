@@ -18,7 +18,7 @@ public class ShopService {
     @Autowired
     ShopRepository shopRepository;
 
-    public Shop createShop(Shop newShop) throws Exception{
+    public Shop createShop(Shop newShop) throws LsyException{
         Shop Shop = shopRepository.findShopByName(newShop.getName());
         if(Shop != null){
             throw new LsyException("shop name existed");
@@ -35,7 +35,7 @@ public class ShopService {
             return shopRepository.save(savingShop);
         }
         catch(Exception e){
-            throw new Exception(e);
+            throw e;
         }
     }
 
