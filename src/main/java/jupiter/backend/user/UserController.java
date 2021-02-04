@@ -50,6 +50,29 @@ public class UserController {
         }
     }
 
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ResponseBody> retrieveUserById(@PathVariable("userId") String userId,
+                                                     @RequestHeader("token") String token){
+        try{
+            if(jwt.isAdmin(token) != null){
+                User foundUser = userService.retrieveUserByIdSafely(userId);
+                ResponseBody responseBody =
+                        new ResponseBody(foundUser, "retrieve user", null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                ResponseBody responseBody =
+                        new ResponseBody(null, "only admin and check", null);
+                return ResponseEntity.ok(responseBody);
+            }
+        }
+        catch (Exception e){
+            ResponseBody responseBody =
+                    new ResponseBody(null, e.getMessage(), e);
+            return ResponseEntity.ok(responseBody);
+        }
+    }
+
     // for admin, token belongs to admin
     @GetMapping("/users/{username}/role/{role}")
     public ResponseEntity<ResponseBody> retrieveUser(@PathVariable("username") String username,
