@@ -12,7 +12,8 @@
 
 #### UserController:
 1. createUser: User
-   - create user
+   - create user if role is owner or customer
+   - if role = admin, block it.
    - API: register
 2. retrieveUser: token, username
    - design for admin to check detail information
