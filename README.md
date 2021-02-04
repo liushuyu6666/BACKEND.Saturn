@@ -1,28 +1,32 @@
 ### controller
-#### jwt:
+#### JwtController:
 1. verifyAndParseToken: token
    - verify token
    - parse the information contained in token
    - anyone can do this
 2. checkProfile: token
    - verify token
-   - find the user info
+   - find the login user info without password
 3. login: loginRequestBody
    - authentication
 
-#### user:
+#### UserController:
 1. createUser: User
    - create user
    - API: register
 2. retrieveUser: token, username
+   - design for admin to check detail information
    - retrieve one user by its name and role
+   - password is hidden
    - need to check the token, only the role=admin could retrieve user
-   - for others, by using myProfile
+   - for users who just want to check his own profile, by using checkProfile in JwtController
 3. listUser: token,
    - list all users whose role=customer or role=owner
    - need to check the token, only the role=admin could retrieve user
 4. updateUser: token
    - verify token
+   - for all customer and owner
+   - password can be changed
    - find the user info
    - update and save
 
