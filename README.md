@@ -15,16 +15,21 @@
    - create user if role is owner or customer
    - if role = admin, block it.
    - API: register
-2. retrieveUser: token, username
+2. retrieveUserById: token, userId
+   - design for admin to check
+   - same as retrieveUser, but just need userId
+   - password is hidden
+   - for users who just want to check his own profile, by using checkProfile in JwtCont
+3. retrieveUser: token, username, role
    - design for admin to check detail information
    - retrieve one user by its name and role
    - password is hidden
    - need to check the token, only the role=admin could retrieve user
    - for users who just want to check his own profile, by using checkProfile in JwtController
-3. listUser: token,
+4. listUser: token,
    - list all users whose role=customer or role=owner
    - need to check the token, only the role=admin could retrieve user
-4. updateUser: token
+5. updateUser: token
    - verify token
    - for all customer and owner
    - password can be changed
