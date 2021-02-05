@@ -1,7 +1,9 @@
 package jupiter.backend.dish;
 
+import jupiter.backend.jwt.JWT;
 import jupiter.backend.lsyexception.LsyException;
 import jupiter.backend.response.ResponseBody;
+import jupiter.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,14 +18,31 @@ public class DishController {
     @Autowired
     DishService dishService;
 
+    @Autowired
+    UserService userService;
+
+    @Autowired
+    JWT jwt;
+
     @PostMapping("/shops/{shopId}/dishes")
     public ResponseEntity<ResponseBody> createDish(@PathVariable("shopId") String shopId,
-                                                   @RequestBody Dish newDish){
+                                                   @RequestBody Dish newDish,
+                                                   @RequestHeader("token") String token){
         try{
-            Dish dish = dishService.createDish(shopId, newDish);
-            ResponseBody responseBody =
-                    new ResponseBody(dish, "create new dish under " + shopId, null);
-            return ResponseEntity.ok(responseBody);
+            String loginName = jwt.isOwner(token);
+            if(loginName != null){
+                String ownerId = userService.find_Id(loginName, "owner");
+                Dish dish = dishService.createDish(shopId, ownerId, newDish);
+                ResponseBody responseBody =
+                        new ResponseBody(dish, "create new dish under " + shopId, null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                ResponseBody responseBody =
+                        new ResponseBody(null, "only owner can create dish", null);
+                return ResponseEntity.ok(responseBody);
+            }
+
         }
         catch (LsyException e){
             ResponseBody responseBody =
@@ -39,12 +58,23 @@ public class DishController {
 
     @GetMapping("/shops/{shopId}/dishes/{dishId}")
     public ResponseEntity<ResponseBody> retrieveDish(@PathVariable("shopId") String shopId,
-                             @PathVariable("dishId") String dishId){
+                                                     @PathVariable("dishId") String dishId,
+                                                     @RequestHeader("token") String token){
         try {
-            Dish dish = dishService.retrieveDish(shopId, dishId);
-            ResponseBody responseBody =
-                    new ResponseBody(dish, "get dish", null);
-            return ResponseEntity.ok(responseBody);
+            String loginName = jwt.isOwner(token);
+            if(loginName != null) {
+                String ownerId = userService.find_Id(loginName, "owner");
+                Dish dish = dishService.retrieveDish(shopId, dishId, ownerId);
+                ResponseBody responseBody =
+                        new ResponseBody(dish, "get dish", null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                Dish dish = dishService.retrieveDish(shopId, dishId);
+                ResponseBody responseBody =
+                        new ResponseBody(dish, "get dish", null);
+                return ResponseEntity.ok(responseBody);
+            }
         }
         catch (LsyException e){
             ResponseBody responseBody =
@@ -59,12 +89,23 @@ public class DishController {
     }
 
     @GetMapping("/shops/{shopId}/dishes")
-    public ResponseEntity<ResponseBody> listShop(@PathVariable("shopId") String shopId){
+    public ResponseEntity<ResponseBody> listShop(@PathVariable("shopId") String shopId,
+                                                 @RequestHeader("token") String token){
         try{
-            List<Dish> dishes = dishService.listDishes(shopId);
-            ResponseBody responseBody =
-                    new ResponseBody(dishes, "get dishes list", null);
-            return ResponseEntity.ok(responseBody);
+            String loginName = jwt.isOwner(token);
+            if(loginName != null) {
+                String ownerId = userService.find_Id(loginName, "owner");
+                List<Dish> dishes = dishService.listDishes(shopId, ownerId);
+                ResponseBody responseBody =
+                        new ResponseBody(dishes, "get dishes list", null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                List<Dish> dishes = dishService.listDishes(shopId);
+                ResponseBody responseBody =
+                        new ResponseBody(dishes, "get dishes list", null);
+                return ResponseEntity.ok(responseBody);
+            }
         }
         catch(LsyException e){
             ResponseBody responseBody =
@@ -81,13 +122,23 @@ public class DishController {
     @PostMapping("/shops/{shopId}/dishes/{dishId}")
     public ResponseEntity<ResponseBody> updateDish(@PathVariable("shopId") String shopId,
                                                    @PathVariable("dishId") String dishId,
-                                                   @RequestBody Dish dish){
+                                                   @RequestBody Dish dish,
+                                                   @RequestHeader("token") String token){
         dish.set_id(dishId);
         try{
-            Dish newDish = dishService.updateDish(shopId, dish);
-            ResponseBody responseBody =
-                    new ResponseBody(newDish, "update it", null);
-            return ResponseEntity.ok(responseBody);
+            String loginName = jwt.isOwner(token);
+            if(loginName != null) {
+                String ownerId = userService.find_Id(loginName, "owner");
+                Dish newDish = dishService.updateDish(shopId, ownerId, dish);
+                ResponseBody responseBody =
+                        new ResponseBody(newDish, "update it", null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                ResponseBody responseBody =
+                        new ResponseBody(null, "only owner can update", null);
+                return ResponseEntity.ok(responseBody);
+            }
         }
         catch(LsyException e){
             ResponseBody responseBody =
@@ -99,7 +150,37 @@ public class DishController {
                     new ResponseBody(null, e.getMessage(), null);
             return ResponseEntity.ok(responseBody);
         }
+    }
 
+    @DeleteMapping("/shops/{shopId}/dishes/{dishId}")
+    public ResponseEntity<ResponseBody> deleteDish(@PathVariable("shopId") String shopId,
+                                                   @PathVariable("dishId") String dishId,
+                                                   @RequestHeader("token") String token){
+        try{
+            String loginName = jwt.isOwner(token);
+            if(loginName != null) {
+                String ownerId = userService.find_Id(loginName, "owner");
+                boolean isDelete = dishService.deleteDish(shopId, dishId, ownerId);
+                ResponseBody responseBody =
+                        new ResponseBody(isDelete, "delete it", null);
+                return ResponseEntity.ok(responseBody);
+            }
+            else{
+                ResponseBody responseBody =
+                        new ResponseBody(null, "only owner can delete it", null);
+                return ResponseEntity.ok(responseBody);
+            }
+        }
+        catch (LsyException e){
+            ResponseBody responseBody =
+                    new ResponseBody(null, e.getMessage(), null);
+            return ResponseEntity.ok(responseBody);
+        }
+        catch (Exception e){
+            ResponseBody responseBody =
+                    new ResponseBody(null, e.getMessage(), null);
+            return ResponseEntity.ok(responseBody);
+        }
     }
 
 }
