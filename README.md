@@ -1,3 +1,7 @@
+### JWT
+1. jwt contains username and role for convenience
+
+
 ### controller
 #### JwtController:
 1. verifyAndParseToken: token
@@ -36,37 +40,36 @@
    - find the user info
    - update and save
 
-#### shop:
+#### ShopController:
 1. createShop: token, shop
    - verify token to confirm that the role=owner
-   - (frontend) get the username and fill in the owner automatically
-   - check if username is in the ownersList, if not, add it automatically
+   - since username is added from the frontend, in the backend it need to be convert into _id.
+   - check if login's _id is in the ownersList, if not, add it automatically
 2. retrieveShop: token, shopId
-   - verify token to confirm that the role=owner
-   - get the username
-   - get the shop information
+   - check token, if role = customer or admin, no permission need
+   - check token, if role = owner, only could check its own shop
+   - ownersId need to be convert to ownersName
 3. listShop: token,
-   - verify token to confirm that the role=owner
-   - get the username
-   - get the shopsList
+   - check token, if role = customer or admin, no permission need
+   - check token, if role = owner, only could check its own shop
+   - ownersId need to be convert to ownersName
 4. updateShop: token, shopId
    - verify token to confirm that the role=owner
    - get the username
    - modification, even the owner can be changed
+   - notice: if delete all owners, the shop can't be modified, so from the front end, this action need to be restricted
 5. deleteShop: token, shopId
    - verify token to confirm that the role=owner
    - get the username
    - delete
 
-#### dishes:
+#### DishController:
 1. createDish: token, shopId, dish
    - verify token to confirm that the role=owner
-   - get the username and shopId
+   - verify the authorization of the owner under this shop
    - create it
 2. retrieveDish: token, shopId, dishId
-   - verify token to confirm that the role=owner
-   - get the username, shopId and dishId
-   - retrieve it
+   - if role=owner authorization is needed, if role = customer or admin, needn't to check
 3. listDish: token, shopId
    - verify token to confirm that the role=owner
    - get the username and shopId
@@ -88,16 +91,13 @@
 2. listReviewUnderDish:
    - get shopId and dishId
    - don't need to check token
-3. listReviewUnderUser: token
-   - verify token to confirm that the role=customer
-   - get the username to list all reviews including shopname and dishname.
 
 #### Order:
 1. createOrder: token
    - verify token to confirm that the role=customer
    - create
-2. listOrder: token
+   - notice: can't make sure that the shopId and dishId are existed or valid, need to check when use.
+2. listOrderDetail: token
    - verify token to confirm that the role=customer
-   - get username
-   - list all order under this username
+   - list Order under this customer
 
