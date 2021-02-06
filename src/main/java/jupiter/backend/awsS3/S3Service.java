@@ -63,8 +63,8 @@ public class S3Service {
 
     }
 
-    private String generateFileName(MultipartFile multiPart) {
-        return new Date().getTime() + "-" + multiPart.getOriginalFilename().replace(" ", "_");
+    private String generateFileName(String name) {
+        return name.replace(" ", "_");
     }
 
     private void uploadFileTos3bucket(String fileName, File file) throws Exception{
@@ -81,11 +81,11 @@ public class S3Service {
 
 
 
-    public String createFile(MultipartFile multipartFile) throws Exception{
+    public String createFile(MultipartFile multipartFile, String name) throws Exception{
 
         try {
             File file = convertMultiPartToFile(multipartFile);
-            String fileName = generateFileName(multipartFile);
+            String fileName = generateFileName(name);
             String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
             uploadFileTos3bucket(fileName, file);
             file.delete();
@@ -125,7 +125,7 @@ public class S3Service {
     public String updateFile(String oldFileId, MultipartFile multipartFile) throws Exception{
         try{
             deleteFile(oldFileId);
-            String newUrl = createFile(multipartFile);
+            String newUrl = createFile(multipartFile, oldFileId);
             return newUrl;
         }
         catch (Exception e){

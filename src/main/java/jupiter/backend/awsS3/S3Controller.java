@@ -22,9 +22,10 @@ public class S3Controller {
 //    }
 
     @PostMapping("/files")
-    public ResponseEntity<ResponseBody> createFile(@RequestBody MultipartFile file) {
+    public ResponseEntity<ResponseBody> createFile(@RequestParam(value = "file") MultipartFile file,
+                                                   @RequestParam(value = "name") String name) {
         try{
-            String fileUrl = amazonClient.createFile(file);
+            String fileUrl = amazonClient.createFile(file, name);
             ResponseBody responseBody =
                     new ResponseBody(fileUrl, "upload the file successfully", null);
             return ResponseEntity.ok(responseBody);
