@@ -1,7 +1,10 @@
 package jupiter.backend.order;
 
+import jupiter.backend.dish.DishService;
 import jupiter.backend.jwt.JWT;
 import jupiter.backend.response.ResponseBody;
+import jupiter.backend.shop.Shop;
+import jupiter.backend.shop.ShopService;
 import jupiter.backend.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.aggregation.BooleanOperators;
@@ -19,58 +22,120 @@ public class OrderController {
     JWT jwt;
 
     @Autowired
-    OrderService orderService;
-
-    @Autowired
     UserService userService;
 
+    @Autowired
+    OrderService orderService;
+
     @PostMapping("/orders")
-    public ResponseEntity<ResponseBody> createOrder(@RequestBody Order newOrder,
+    public ResponseEntity<ResponseBody> createOrder(@RequestBody OrderDetail orderDetail,
                                                     @RequestHeader("token") String token){
-        try {
+        try{
             String loginName = jwt.isCustomer(token);
-            if (loginName != null) {
-                String loginId = userService.find_Id(loginName, "customer");
-                Order addedOrder = orderService.createOrder(loginId, newOrder);
-                ResponseBody responseBody =
-                        new ResponseBody(addedOrder, "add order", null);
+            if(loginName != null){
+                String customerId =  userService.find_Id(loginName, "customer");
+                orderService.createOrder(customerId, orderDetail);
+                ResponseBody responseBody = new ResponseBody(true, "create order successfully", null);
                 return ResponseEntity.ok(responseBody);
             }
             else{
-                ResponseBody responseBody =
-                        new ResponseBody(null, "only customer could create token", null);
+                ResponseBody responseBody
+                        = new ResponseBody(null, "only customer can create order", null);
                 return ResponseEntity.ok(responseBody);
             }
         }
         catch (Exception e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), null);
+            ResponseBody responseBody = new ResponseBody(null, e.getMessage(), e);
             return ResponseEntity.ok(responseBody);
         }
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<ResponseBody> listOrders(@RequestHeader("token") String token){
+    public ResponseEntity<ResponseBody> listOrderUnderCustomer(@RequestHeader("token") String token){
         try {
             String loginName = jwt.isCustomer(token);
             if (loginName != null) {
-                String loginId = userService.find_Id(loginName, "customer");
-                List<Order> listOrder = orderService.listOrder(loginId);
+                String customerId = userService.find_Id(loginName, "customer");
+                Order order = orderService.listOrderUnderCustomer(customerId);
                 ResponseBody responseBody =
-                        new ResponseBody(listOrder, "list order", null);
+                        new ResponseBody(order, "list the order", null);
                 return ResponseEntity.ok(responseBody);
-            }
-            else{
+            } else {
                 ResponseBody responseBody =
-                        new ResponseBody(null, "only customer could create token", null);
+                        new ResponseBody(null, "only customer can see the order", null);
                 return ResponseEntity.ok(responseBody);
             }
         }
         catch (Exception e){
             ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), null);
+                    new ResponseBody(null, e.getMessage(), e);
             return ResponseEntity.ok(responseBody);
         }
     }
+
+//    @Autowired
+//    JWT jwt;
+//
+//    @Autowired
+//    OrderService orderService;
+//
+//    @Autowired
+//    UserService userService;
+//
+//    @Autowired
+//    ShopService shopService;
+//
+//    @Autowired
+//    DishService dishService;
+//
+//    @PostMapping("/orders")
+//    public ResponseEntity<ResponseBody> createOrder(@RequestBody Order newOrder,
+//                                                    @RequestHeader("token") String token){
+//        try {
+//            String loginName = jwt.isCustomer(token);
+//            if (loginName != null) {
+//                String loginId = userService.find_Id(loginName, "customer");
+//                Order addedOrder = orderService.createOrder(loginId, newOrder);
+//                ResponseBody responseBody =
+//                        new ResponseBody(addedOrder, "add order", null);
+//                return ResponseEntity.ok(responseBody);
+//            }
+//            else{
+//                ResponseBody responseBody =
+//                        new ResponseBody(null, "only customer could create token", null);
+//                return ResponseEntity.ok(responseBody);
+//            }
+//        }
+//        catch (Exception e){
+//            ResponseBody responseBody =
+//                    new ResponseBody(null, e.getMessage(), null);
+//            return ResponseEntity.ok(responseBody);
+//        }
+//    }
+//
+//    @GetMapping("/orders")
+//    public ResponseEntity<ResponseBody> listOrders(@RequestHeader("token") String token){
+//        try {
+//            String loginName = jwt.isCustomer(token);
+//            if (loginName != null) {
+//                String loginId = userService.find_Id(loginName, "customer");
+//                // list all valid shops
+//                List<Shop> listOrderDetail = orderService.listOrderDetail(loginId);
+//                ResponseBody responseBody =
+//                        new ResponseBody(listOrderDetail, "list order detail", null);
+//                return ResponseEntity.ok(responseBody);
+//            }
+//            else{
+//                ResponseBody responseBody =
+//                        new ResponseBody(null, "only customer could create token", null);
+//                return ResponseEntity.ok(responseBody);
+//            }
+//        }
+//        catch (Exception e){
+//            ResponseBody responseBody =
+//                    new ResponseBody(null, e.getMessage(), null);
+//            return ResponseEntity.ok(responseBody);
+//        }
+//    }
 
 }
