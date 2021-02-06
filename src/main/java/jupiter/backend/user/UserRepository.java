@@ -22,10 +22,22 @@ public interface UserRepository extends MongoRepository<User, String> {
 
 //    ignore password
     @Query(value = "{ 'username': ?0, 'role': ?1}",
-    fields = "{ 'password': 0}")
+            fields = "{ 'username' : 1, 'email': 1, 'role': 1}")
     public User findUserSafely(String username, String role);
 
-    @Query(value = "{}", fields = "{ 'passowrd' : 0}")
+    @Query(value = "{}", fields = "{ 'username' : 1, 'email': 1, 'role': 1}")
     public List<User> findAllSafely();
+
+    // get password
+    @Query(value = "{ 'username': ?0, 'role': ?1}")
+    public User findPassword(String username, String role);
+
+    // find user by Id
+    @Query(value = "{ 'Id': ?0}", fields = "{'username': 1, 'email': 1, 'role': 1}")
+    public User findBy_IdSafely(String Id);
+
+    // find user's order
+    @Query(value = "{ '_id': ?0}", fields = "{'username': 1, 'email': 1, 'role': 1, 'orders': 1}")
+    public User findOrderBy_IdSafely(String userId);
 
 }

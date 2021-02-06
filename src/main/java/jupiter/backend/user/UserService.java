@@ -49,25 +49,30 @@ public class UserService {
         }
     }
 
+    public User retrieveUserByIdSafely(String userId) throws Exception{
+        User foundUser = userRepository.findBy_IdSafely(userId);
+        if(foundUser != null){
+            return foundUser;
+        }
+        else{
+            throw new Exception("can't be retrieved, no such user");
+        }
+    }
+
     // not return password
     public List<User> listUserSafely(){
         return userRepository.findAllSafely();
     }
 
+    // because user have no primary key, so when update, we need to delete it and add again
     public User updateUser(User updatingUser) throws Exception{
         String updatingUsername = updatingUser.getUsername();
         String updatingRole     = updatingUser.getRole();
         User updatedUser = userRepository.findUserByUsernameAndRole(updatingUsername,
                 updatingRole);
         if(updatedUser != null){
-            updatedUser.setEmail(
-                (updatingUser.getEmail() != null)?
-                updatingUser.getEmail():updatedUser.getEmail()
-            );
-            updatedUser.setPassword(
-                (updatingUser.getPassword() != null)?
-                updatingUser.getPassword(): updatedUser.getPassword()
-            );
+            updatedUser.setPassword(updatingUser.getPassword());
+            updatedUser.setEmail(updatingUser.getEmail());
             return userRepository.save(updatedUser);
         }
         else{
@@ -75,26 +80,15 @@ public class UserService {
         }
     }
 
-//    public String createToken(LoginRequestBody loginRequestBody) throws Exception{
-//        String loginUsername = loginRequestBody.getUsername();
-//        String loginPassword = loginRequestBody.getPassword();
-//        String loginRole     = loginRequestBody.getRole();
-//        User foundUser = userRepository.findUserByUsernameAndRole(loginUsername, loginRole);
-//
-//        if(foundUser != null){
-//            if(foundUser.getPassword().equals(loginPassword)){
-//                return jwt.createToken(loginUsername, foundUser.getRole());
-//            }
-//            else{
-//                throw new Exception("password and username don't match");
-//            }
-//        }
-//        else{
-//            if(loginUsername == null) throw new Exception("username can't be empty");
-//            else throw new Exception("no such user");
-//        }
-//    }
+    public String findPassword(String username, String role){
+        return userRepository.findPassword(username, role).getPassword();
+    }
 
-
+    // get id by username and role
+    public String find_Id(String username, String role){
+        User user = userRepository.findUserByUsernameAndRole(username, role);
+        if(user != null) return user.getId();
+        else return null;
+    }
 
 }
