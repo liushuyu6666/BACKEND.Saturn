@@ -1,7 +1,5 @@
 package jupiter.backend.shop;
 
-import jupiter.backend.dish.Dish;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -13,8 +11,11 @@ import java.util.List;
 public interface ShopRepository extends MongoRepository<Shop, String> {
 
     // for owner to find all shops
-    @Query("{'owner': ?0}")
-    List<Shop> findAllByOwner(String owner);
+    @Query("{'owners': ?0}")
+    List<Shop> findAllByOwner(String ownerId);
+
+    @Query("{'_id': ?0, 'owners': ?1}")
+    Shop findBy_idAndOwnerId(String shopId, String ownerId);
 
     // find all shop name
     @Query(value = "{}", fields = "{'name': 1}")
@@ -30,6 +31,9 @@ public interface ShopRepository extends MongoRepository<Shop, String> {
 
     @Query(value = "{'_id': ?0, 'dishes.name': ?1}")
     Shop findShopBy_idAndDishName(String id, String dishName);
+
+    @Query(value = "{'_id': ?0, 'dishes._id': ?1, 'owners': ?2}")
+    Shop findShopBy_idDish_idAndOwnerId(String id, String dishId, String ownerId);
 
     // find a specific dish by shop id and dish id
     @Query(value = "{'_id': ?0, 'dishes._id': ?1}")
