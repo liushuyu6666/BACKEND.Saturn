@@ -30,7 +30,8 @@ public class LoginRequest {
             }
         }
         else{
-            if(loginUsername == null) throw new Exception("username can't be empty");
+            if(loginUsername == null || loginUsername.trim().equals("")) throw new Exception("username can't be empty");
+            else if(loginRole == null || loginRole.trim().equals("")) throw new Exception("role can't be empty");
             else throw new Exception("no such user");
         }
     }

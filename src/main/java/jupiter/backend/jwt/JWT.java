@@ -53,4 +53,43 @@ public class JWT {
         }
     }
 
+    public String isOwner(String token) throws Exception{
+        try{
+            HashMap<String, String> details = verifyToken(token);
+            String username = details.get("username");
+            String role = details.get("role");
+            if(role.equals("owner")) return username;
+            else return null;
+        }
+        catch (Exception e){
+            throw e;
+        }
+    }
+
+    public String isCustomer(String token) throws Exception{
+        try{
+            HashMap<String, String> details = verifyToken(token);
+            String username = details.get("username");
+            String role = details.get("role");
+            if(role.equals("customer")) return username;
+            else return null;
+        }
+        catch (Exception e){
+            throw e;
+        }
+    }
+
+    public String isAdmin(String token) throws Exception{
+        try{
+            HashMap<String, String> details = verifyToken(token);
+            String username = details.get("username");
+            String role = details.get("role");
+            if(role.equals("admin")) return username;
+            else return null;
+        }
+        catch (Exception e){
+            throw e;
+        }
+    }
+
 }
