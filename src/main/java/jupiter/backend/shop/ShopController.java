@@ -1,179 +1,176 @@
 package jupiter.backend.shop;
 
-import jupiter.backend.address.Address;
-import jupiter.backend.jwt.JWT;
-import jupiter.backend.lsyexception.LsyException;
-import jupiter.backend.user.UserService;
+import jupiter.backend.core.AuthenticationService;
+import jupiter.backend.dump.shop.DumpShop;
+import jupiter.backend.dump.shop.DumpShopService;
+import jupiter.backend.payload.response.MessageResponse;
+import jupiter.backend.role.ERole;
+import jupiter.backend.role.Role;
+import jupiter.backend.role.RoleRepository;
+import jupiter.backend.security.userDetails.UserDetailsImpl;
+import jupiter.backend.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
-import jupiter.backend.response.ResponseBody;
+import jupiter.backend.payload.response.ResponseBody;
 
 import java.util.*;
 
-@RequestMapping("/v1")
+@RequestMapping("/v1/jupiter")
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class ShopController {
+
+    @Autowired
+    AuthenticationService authenticationService;
 
     @Autowired
     ShopService shopService;
 
     @Autowired
-    UserService userService;
-
-    @Autowired
-    JWT jwt;
+    DumpShopService dumpShopService;
 
     @PostMapping("/shops")
-    public ResponseEntity<ResponseBody> createShop(@RequestBody Shop shopBody,
-                                                   @RequestHeader String token){
-        try{
-            String loginName = jwt.isOwner(token);
-            if(loginName != null){
-                Shop newShop = shopService.createShop(shopBody, loginName);
-                ResponseBody responseBody =
-                        new ResponseBody(newShop, "new shop is created", null);
-                return ResponseEntity.ok(responseBody);
-            }
-            else{
-                ResponseBody responseBody =
-                        new ResponseBody(null, "only owner can create", null);
-                return ResponseEntity.ok(responseBody);
-            }
+    @PreAuthorize("hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> createShop(
+            Authentication authentication,
+            @RequestBody Shop newShop){
+        if(newShop.getShopName().trim().equals("")){
+            return ResponseEntity
+                .badRequest()
+                .body(new MessageResponse("shop's name can't be empty or whitespace"));
         }
-        catch (LsyException e){
-            ResponseBody responseBody = new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
+        if(shopService.existsByShopName(newShop.getShopName())){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("shop's name existed"));
         }
-        catch (Exception e){
-            ResponseBody responseBody = new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Shop savedShop = shopService.createShop(newShop, userId);
+        ResponseBody responseBody
+            = new ResponseBody(savedShop,
+                "create shop successfully",
+                null);
+        return ResponseEntity.ok(responseBody);
     }
 
-    @GetMapping("/shops/{Id}")
-    public ResponseEntity<ResponseBody> retrieveShop(@PathVariable("Id") String shopId,
-                                                     @RequestHeader("token") String token){
-        try{
-            if(jwt.isOwner(token) != null){
-                String loginId = userService.find_Id(jwt.isOwner(token), "owner");
-                Shop findShop = shopService.retrieveShop(shopId, loginId);
-                ResponseBody responseBody =
-                        new ResponseBody(findShop, "find it", null);
-                return ResponseEntity.ok(responseBody);
-            }
-            else{
-                Shop findShop = shopService.retrieveShop(shopId);
-                ResponseBody responseBody =
-                        new ResponseBody(findShop, "find it", null);
-                return ResponseEntity.ok(responseBody);
-            }
+    @GetMapping("/shops/{id}")
+    public ResponseEntity<?> retrieveShop(
+            @PathVariable("id") String shopId
+    ){
+        Shop retrievedShop = shopService.retrieveShop(shopId).orElse(null);
+        if(retrievedShop == null){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("no such shop"));
         }
-        catch (LsyException e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
+        ResponseBody responseBody
+                = new ResponseBody(retrievedShop,
+                String.format("retrieve shop id: %s", shopId),
+                null);
+        return ResponseEntity.ok(responseBody);
+    }
+
+    @GetMapping("/manage/shops/{shopId}")
+    public ResponseEntity<?> retrieveShopUnderOwner(
+            Authentication authentication,
+            @PathVariable("shopId") String shopId
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Shop retrievedShop = shopService
+                .retrieveShopUnderOwner(shopId, userId)
+                .orElse(null);
+        if(retrievedShop == null){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new
+                        MessageResponse(
+                            String.format("no such shop under user: %s", userId)));
         }
-        catch (Exception e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+        ResponseBody responseBody
+                = new ResponseBody(retrievedShop,
+                String.format("retrieve shop id under user id: %s, %s", shopId, userId),
+                null);
+        return ResponseEntity.ok(responseBody);
     }
 
     @GetMapping("/shops")
-    public ResponseEntity<ResponseBody> listShop(@RequestHeader("token") String token){
-        try{
-            if(jwt.isOwner(token) != null){
-                String loginId = userService.find_Id(jwt.isOwner(token), "owner");
-                List<Shop> findShop = shopService.listShop(loginId);
-                ResponseBody responseBody =
-                        new ResponseBody(findShop, "get list", null);
-                return ResponseEntity.ok(responseBody);
-            }
-            else{
-                List<Shop> shopList = shopService.listShop();
-                ResponseBody responseBody =
-                        new ResponseBody(shopList, "get list", null);
-                return ResponseEntity.ok(responseBody);
-            }
-        }
-        catch (LsyException e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
-        catch (Exception e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+    public ResponseEntity<?> listShop(){
+        List<Shop> listShop = shopService.listShop();
+        ResponseBody responseBody
+                = new ResponseBody(listShop, "list shops", null);
+        return ResponseEntity.ok(responseBody);
     }
 
-    @PostMapping("/shops/{Id}")
-    public ResponseEntity<ResponseBody> updateShop(@PathVariable("Id") String shopId,
-                                                   @RequestBody Shop newShop,
-                                                   @RequestHeader("token") String token) {
-        try{
-            String loginName = jwt.isOwner(token);
-            if(loginName != null){
-                String loginId = userService.find_Id(loginName, "owner");
-                Shop updatedShop = shopService.updateShop(shopId, loginId, newShop);
-                ResponseBody responseBody =
-                        new ResponseBody(updatedShop, "update it", null);
-                return ResponseEntity.ok(responseBody);
-            }
-            else{
-                ResponseBody responseBody =
-                    new ResponseBody(null, "only owner can update", null);
-            return ResponseEntity.ok(responseBody);
-            }
-        }
-        catch (LsyException e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
-        catch (Exception e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+    @GetMapping("/manage/shops")
+    public ResponseEntity<?> listShopUnderOwner(
+            Authentication authentication
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        List<Shop> listShop = shopService.listShopUnderOwner(userId);
+        ResponseBody responseBody
+                = new ResponseBody(listShop,
+                String.format("list shops under %s",userId),
+                null);
+        return ResponseEntity.ok(responseBody);
     }
 
-    @DeleteMapping("/shops/{Id}")
-    public ResponseEntity<ResponseBody> deleteShop(@PathVariable("Id") String shopId,
-                                                   @RequestHeader("token") String token){
-        try{
-            String loginName = jwt.isOwner(token);
-            if(loginName != null){
-                String ownerId = userService.find_Id(loginName, "owner");
-                boolean deleteShop = shopService.deleteShop(shopId, ownerId);
-                ResponseBody responseBody;
-                if(deleteShop){
-                    responseBody = new ResponseBody(true, "delete successfully", null);
-                }
-                else{
-                    responseBody = new ResponseBody(false, "delete failure", null);
-                }
-                return ResponseEntity.ok(responseBody);
-            }
-            else{
-                ResponseBody responseBody
-                        = new ResponseBody(null, "only owner can delete", null);
-                return ResponseEntity.ok(responseBody);
-            }
+    @PostMapping("/shops/{shopId}")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> updateShop(
+            Authentication authentication,
+            @PathVariable("shopId") String shopId,
+            @RequestBody Shop updatingShop
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Shop targetShop = shopService.findShopByIdAndOwnerId(shopId, userId).orElse(null);
+        if(targetShop == null){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("no such shop under the owner"));
         }
-        catch (LsyException e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
+        if(updatingShop.getShopName().trim().equals("")){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("new shop's name can't be empty or whitespace"));
+        }
+        if(shopService.otherExistsByShopName(shopId, updatingShop.getShopName())){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("new shop's name existed"));
+        }
+        updatingShop.setId(shopId);
+        Shop shop = shopService.updateShop(updatingShop, userId);
+        ResponseBody responseBody = new ResponseBody(shop, "update it", null);
+        return ResponseEntity.ok(responseBody);
+    }
+
+    @DeleteMapping("shops/{shopId}")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> deleteShop(
+            Authentication authentication,
+            @PathVariable("shopId") String shopId
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Shop targetShop = shopService.findShopByIdAndOwnerId(shopId, userId).orElse(null);
+        if(targetShop == null){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("no such shop under the owner"));
+        }
+        DumpShop savedDumpShop = dumpShopService.createDumpShop(targetShop);
+        if(shopService.deleteShop(shopId)){
+            ResponseBody responseBody
+                    = new ResponseBody(
+                            savedDumpShop,
+                    "delete successfully",
+                    null);
             return ResponseEntity.ok(responseBody);
         }
-        catch(Exception e){
-            ResponseBody responseBody = new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+        else return ResponseEntity.badRequest().body(new MessageResponse("delete fail"));
     }
 }

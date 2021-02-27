@@ -1,34 +1,37 @@
 package jupiter.backend.shop;
 
 import jupiter.backend.address.Address;
-import jupiter.backend.dish.Dish;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 @Document(collection = "shop")
 public class Shop {
 
     @Id
-    private String _id;
+    private String id;
 
-    private String name;
+    @NotBlank
+    @Size(max=50)
+    private String shopName;
 
+    @Size(max=100)
     private String desc;
 
     private String imgUrl;
 
-    private List<String> categories;
+    private Set<String> categories;
 
-    private List<String> owners;
+    // manual reference
+    private String ownerId;
 
     private Address address;
-
-    private List<Dish> dishes;
 
     @CreatedDate
     private Date createAt;
@@ -39,20 +42,50 @@ public class Shop {
     public Shop() {
     }
 
-    public String get_id() {
-        return _id;
+    public Shop(@NotBlank @Size(max = 50) String shopName,
+                @Size(max = 100) String desc,
+                String imgUrl,
+                Set<String> categories,
+                String ownerId,
+                Address address) {
+        this.shopName = shopName;
+        this.desc = desc;
+        this.imgUrl = imgUrl;
+        this.categories = categories;
+        this.ownerId = ownerId;
+        this.address = address;
     }
 
-    public void set_id(String _id) {
-        this._id = _id;
+    public Shop(String id,
+                @NotBlank @Size(max = 50) String shopName,
+                @Size(max = 100) String desc,
+                String imgUrl,
+                Set<String> categories,
+                String ownerId,
+                Address address) {
+        this.id = id;
+        this.shopName = shopName;
+        this.desc = desc;
+        this.imgUrl = imgUrl;
+        this.categories = categories;
+        this.ownerId = ownerId;
+        this.address = address;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getShopName() {
+        return shopName;
+    }
+
+    public void setShopName(String shopName) {
+        this.shopName = shopName;
     }
 
     public String getDesc() {
@@ -71,20 +104,20 @@ public class Shop {
         this.imgUrl = imgUrl;
     }
 
-    public List<String> getCategories() {
+    public Set<String> getCategories() {
         return categories;
     }
 
-    public void setCategories(List<String> categories) {
+    public void setCategories(Set<String> categories) {
         this.categories = categories;
     }
 
-    public List<String> getOwners() {
-        return owners;
+    public String getOwnerId() {
+        return ownerId;
     }
 
-    public void setOwners(List<String> owners) {
-        this.owners = owners;
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     public Address getAddress() {
@@ -93,14 +126,6 @@ public class Shop {
 
     public void setAddress(Address address) {
         this.address = address;
-    }
-
-    public List<Dish> getDishes() {
-        return dishes;
-    }
-
-    public void setDishes(List<Dish> dishes) {
-        this.dishes = dishes;
     }
 
     public Date getCreateAt() {

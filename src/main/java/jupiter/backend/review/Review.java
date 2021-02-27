@@ -4,32 +4,42 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.UUID;
 
 public class Review {
 
     @Id
-    private String _id; // even if there is a @Id notation, _id will not generate automatically.
+    private String id;
 
+    @NotBlank
     private String userId;
 
+    @NotBlank
+    private String dishId;
+
+    @Size(max=100)
     private String content;
 
-    private Integer stars;
+    private Integer star;
 
+    @CreatedDate
     private Date createAt;
+
+    @LastModifiedDate
+    private Date modifiedAt;
 
     public Review() {
     }
 
-    public String get_id() {
-        return _id;
+    public String getId() {
+        return id;
     }
 
-    public void set_id(String userId) {
-        Date now = new Date();
-        this._id = Long.toString(now.getTime()) + userId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getUserId() {
@@ -40,6 +50,14 @@ public class Review {
         this.userId = userId;
     }
 
+    public String getDishId() {
+        return dishId;
+    }
+
+    public void setDishId(String dishId) {
+        this.dishId = dishId;
+    }
+
     public String getContent() {
         return content;
     }
@@ -48,21 +66,27 @@ public class Review {
         this.content = content;
     }
 
-    public Integer getStars() {
-        return stars;
+    public Integer getStar() {
+        return star;
     }
 
-    public void setStars(Integer stars) {
-        this.stars = stars;
+    public void setStar(Integer star) {
+        this.star = star;
     }
 
     public Date getCreateAt() {
         return createAt;
     }
 
-    public void setCreateAt() {
-        Date now = new Date();
-        Date currentTime = new Date(now.getTime());
-        this.createAt = currentTime;
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
+    }
+
+    public Date getModifiedAt() {
+        return modifiedAt;
+    }
+
+    public void setModifiedAt(Date modifiedAt) {
+        this.modifiedAt = modifiedAt;
     }
 }

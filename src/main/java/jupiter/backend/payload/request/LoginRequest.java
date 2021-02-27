@@ -1,18 +1,13 @@
-package jupiter.backend.loginrequest;
+package jupiter.backend.payload.request;
 
-import org.springframework.stereotype.Service;
+import javax.validation.constraints.NotBlank;
 
-@Service
-public class LoginRequestBody {
-
+public class LoginRequest {
+    @NotBlank
     private String username;
 
+    @NotBlank
     private String password;
-
-    private String role;
-
-    public LoginRequestBody() {
-    }
 
     public String getUsername() {
         return username;
@@ -28,13 +23,5 @@ public class LoginRequestBody {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 }

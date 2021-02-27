@@ -1,4 +1,4 @@
-package jupiter.backend.response;
+package jupiter.backend.payload.response;
 
 public class ResponseBody<T> {
 

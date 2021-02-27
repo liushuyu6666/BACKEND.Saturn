@@ -1,10 +1,20 @@
 package jupiter.backend.user;
 
-import jupiter.backend.order.Order;
+import jupiter.backend.role.Role;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Document(collection = "user")
 public class User {
@@ -12,17 +22,57 @@ public class User {
     @Id
     private String id; // if use .save, id can generate automatically
 
+    @NotBlank
+    @Size(max=50)
     private String username;
 
+    @NotBlank
+    @Size(max=100)
     private String password;
 
+    @Size(max=100)
+    @Email
     private String email;
 
-    private String role;
+    @DBRef
+    private Set<Role> authorities = new HashSet<>();
 
-//    private List<Order> orders;
+    @CreatedDate
+    private Date createAt;
+
+    @LastModifiedDate
+    private Date modifiedAt;
 
     public User() {
+    }
+
+    public User(
+            @NotBlank @Size(max = 50) String username,
+            @Size(max = 100) @Email String email,
+            Set<Role> authorities) {
+        this.username = username;
+        this.email = email;
+        this.authorities = authorities;
+    }
+
+    public User(
+            @NotBlank @Size(max = 50) String username,
+            @NotBlank @Size(max = 100) String password,
+            @Size(max = 100) @Email String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
+    public User(
+            @NotBlank @Size(max = 50) String username,
+            @NotBlank @Size(max = 100) String password,
+            @Size(max = 100) @Email String email,
+            Set<Role> authorities) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.authorities = authorities;
     }
 
     public String getId() {
@@ -57,19 +107,27 @@ public class User {
         this.email = email;
     }
 
-    public String getRole() {
-        return role;
+    public Set<Role> getAuthorities() {
+        return authorities;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setAuthorities(Set<Role> authorities) {
+        this.authorities = authorities;
     }
 
-//    public List<Order> getOrders() {
-//        return orders;
-//    }
-//
-//    public void setOrders(List<Order> orders) {
-//        this.orders = orders;
-//    }
+    public Date getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
+    }
+
+    public Date getModifiedAt() {
+        return modifiedAt;
+    }
+
+    public void setModifiedAt(Date modifiedAt) {
+        this.modifiedAt = modifiedAt;
+    }
 }

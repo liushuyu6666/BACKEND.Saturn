@@ -1,30 +1,45 @@
 package jupiter.backend.dish;
 
 
-import jupiter.backend.review.Review;
+import jupiter.backend.review.ShortReview;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 public class Dish {
 
     @Id
-    private String _id;
+    private String id;
 
+    @NotBlank
+    private String shopId;
+
+    @NotBlank
+    private String ownerId;
+
+    @NotBlank
+    @Size(max=50)
     private String name;
 
     private String imgUrl;
 
+    @Size(max=100)
     private String desc;
 
-    private String category;
+    private Set<String> categories;
+
+    private List<ShortReview> top3Reviews;
 
     private Float price;
 
-    private List<Review> review;
+    @CreatedDate
+    private Date createAt;
 
     @LastModifiedDate
     private Date modifiedAt;
@@ -32,17 +47,45 @@ public class Dish {
     public Dish() {
     }
 
-    public String get_id() {
-        return _id;
+    public Dish(
+            @NotBlank String shopId,
+            @NotBlank String ownerId,
+            @NotBlank @Size(max = 50) String name,
+            String imgUrl,
+            @Size(max = 100) String desc,
+            Set<String> categories,
+            Float price) {
+        this.shopId = shopId;
+        this.ownerId = ownerId;
+        this.name = name;
+        this.imgUrl = imgUrl;
+        this.desc = desc;
+        this.categories = categories;
+        this.price = price;
     }
 
-    public void set_id() {
-        Date now = new Date();
-        this._id = Long.toString(now.getTime());
+    public String getId() {
+        return id;
     }
 
-    public void set_id(String specifiedId) {
-        this._id = specifiedId;
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getShopId() {
+        return shopId;
+    }
+
+    public void setShopId(String shopId) {
+        this.shopId = shopId;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     public String getName() {
@@ -69,12 +112,20 @@ public class Dish {
         this.desc = desc;
     }
 
-    public String getCategory() {
-        return category;
+    public Set<String> getCategories() {
+        return categories;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategories(Set<String> categories) {
+        this.categories = categories;
+    }
+
+    public List<ShortReview> getTop3Reviews() {
+        return top3Reviews;
+    }
+
+    public void setTop3Reviews(List<ShortReview> top3Reviews) {
+        this.top3Reviews = top3Reviews;
     }
 
     public Float getPrice() {
@@ -85,21 +136,19 @@ public class Dish {
         this.price = price;
     }
 
-    public List<Review> getReview() {
-        return review;
+    public Date getCreateAt() {
+        return createAt;
     }
 
-    public void setReview(List<Review> review) {
-        this.review = review;
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
     }
 
     public Date getModifiedAt() {
         return modifiedAt;
     }
 
-    public void setModifiedAt() {
-        Date now = new Date();
-        Date currentTime = new Date(now.getTime());
-        this.modifiedAt = currentTime;
+    public void setModifiedAt(Date modifiedAt) {
+        this.modifiedAt = modifiedAt;
     }
 }

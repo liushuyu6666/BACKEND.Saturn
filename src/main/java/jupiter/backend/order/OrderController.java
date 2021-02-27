@@ -1,141 +1,78 @@
 package jupiter.backend.order;
 
+import jupiter.backend.core.AuthenticationService;
 import jupiter.backend.dish.DishService;
-import jupiter.backend.jwt.JWT;
-import jupiter.backend.response.ResponseBody;
-import jupiter.backend.shop.Shop;
-import jupiter.backend.shop.ShopService;
-import jupiter.backend.user.UserService;
+import jupiter.backend.payload.response.MessageResponse;
+import jupiter.backend.payload.response.ResponseBody;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.aggregation.BooleanOperators;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-@RequestMapping("/v1")
+@RequestMapping("/v1/jupiter")
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class OrderController {
 
     @Autowired
-    JWT jwt;
-
-    @Autowired
-    UserService userService;
+    AuthenticationService authenticationService;
 
     @Autowired
     OrderService orderService;
 
+    @Autowired
+    DishService dishService;
+
     @PostMapping("/orders")
-    public ResponseEntity<ResponseBody> createOrder(@RequestBody OrderDetail orderDetail,
-                                                    @RequestHeader("token") String token){
-        try{
-            String loginName = jwt.isCustomer(token);
-            if(loginName != null){
-                String customerId =  userService.find_Id(loginName, "customer");
-                orderService.createOrder(customerId, orderDetail);
-                ResponseBody responseBody = new ResponseBody(true, "create order successfully", null);
-                return ResponseEntity.ok(responseBody);
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    public ResponseEntity<?> createOrder(
+            Authentication authentication,
+            @RequestBody Order newOrder
+    ){
+        if(newOrder.getDishAmount().isEmpty()){
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("no order in the list"));
+        }
+        for(Map.Entry<String, Integer> entry : newOrder.getDishAmount().entrySet()) {
+            if(!dishService.existsById(entry.getKey())){
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse(String.format(
+                                "no such dishId: %s", entry.getKey()
+                        )));
             }
-            else{
-                ResponseBody responseBody
-                        = new ResponseBody(null, "only customer can create order", null);
-                return ResponseEntity.ok(responseBody);
+            if(entry.getValue() <= 0 ){
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse(String.format(
+                                "amount of %s should be larger than 0",
+                                Objects.requireNonNull(dishService.findById(entry.getKey()).orElse(null)).getName()
+                        )));
             }
         }
-        catch (Exception e){
-            ResponseBody responseBody = new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Order savedOrder = orderService.createOrder(newOrder, userId);
+        ResponseBody responseBody = new ResponseBody(savedOrder,
+                "create order successfully", null);
+        return ResponseEntity.ok(responseBody);
     }
 
     @GetMapping("/orders")
-    public ResponseEntity<ResponseBody> listOrderUnderCustomer(@RequestHeader("token") String token){
-        try {
-            String loginName = jwt.isCustomer(token);
-            if (loginName != null) {
-                String customerId = userService.find_Id(loginName, "customer");
-                Order order = orderService.listOrderUnderCustomer(customerId);
-                ResponseBody responseBody =
-                        new ResponseBody(order, "list the order", null);
-                return ResponseEntity.ok(responseBody);
-            } else {
-                ResponseBody responseBody =
-                        new ResponseBody(null, "only customer can see the order", null);
-                return ResponseEntity.ok(responseBody);
-            }
-        }
-        catch (Exception e){
-            ResponseBody responseBody =
-                    new ResponseBody(null, e.getMessage(), e);
-            return ResponseEntity.ok(responseBody);
-        }
+    @PreAuthorize("hasRole('ROLE_CUSTOMER')")
+    public ResponseEntity<?> listOrders(
+            Authentication authentication
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        List<Order> orderList = orderService.orderRepository.findAllByUserId(userId);
+        ResponseBody responseBody = new ResponseBody(orderList, "list all order", null);
+        return ResponseEntity.ok(responseBody);
     }
-
-//    @Autowired
-//    JWT jwt;
-//
-//    @Autowired
-//    OrderService orderService;
-//
-//    @Autowired
-//    UserService userService;
-//
-//    @Autowired
-//    ShopService shopService;
-//
-//    @Autowired
-//    DishService dishService;
-//
-//    @PostMapping("/orders")
-//    public ResponseEntity<ResponseBody> createOrder(@RequestBody Order newOrder,
-//                                                    @RequestHeader("token") String token){
-//        try {
-//            String loginName = jwt.isCustomer(token);
-//            if (loginName != null) {
-//                String loginId = userService.find_Id(loginName, "customer");
-//                Order addedOrder = orderService.createOrder(loginId, newOrder);
-//                ResponseBody responseBody =
-//                        new ResponseBody(addedOrder, "add order", null);
-//                return ResponseEntity.ok(responseBody);
-//            }
-//            else{
-//                ResponseBody responseBody =
-//                        new ResponseBody(null, "only customer could create token", null);
-//                return ResponseEntity.ok(responseBody);
-//            }
-//        }
-//        catch (Exception e){
-//            ResponseBody responseBody =
-//                    new ResponseBody(null, e.getMessage(), null);
-//            return ResponseEntity.ok(responseBody);
-//        }
-//    }
-//
-//    @GetMapping("/orders")
-//    public ResponseEntity<ResponseBody> listOrders(@RequestHeader("token") String token){
-//        try {
-//            String loginName = jwt.isCustomer(token);
-//            if (loginName != null) {
-//                String loginId = userService.find_Id(loginName, "customer");
-//                // list all valid shops
-//                List<Shop> listOrderDetail = orderService.listOrderDetail(loginId);
-//                ResponseBody responseBody =
-//                        new ResponseBody(listOrderDetail, "list order detail", null);
-//                return ResponseEntity.ok(responseBody);
-//            }
-//            else{
-//                ResponseBody responseBody =
-//                        new ResponseBody(null, "only customer could create token", null);
-//                return ResponseEntity.ok(responseBody);
-//            }
-//        }
-//        catch (Exception e){
-//            ResponseBody responseBody =
-//                    new ResponseBody(null, e.getMessage(), null);
-//            return ResponseEntity.ok(responseBody);
-//        }
-//    }
 
 }

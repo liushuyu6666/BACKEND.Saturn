@@ -68,14 +68,9 @@ public class S3Service {
     }
 
     private void uploadFileTos3bucket(String fileName, File file) throws Exception{
-        try{
-            PutObjectRequest putObjectRequest =
-                    new PutObjectRequest(bucketName, fileName, file).withCannedAcl(CannedAccessControlList.PublicRead);
-            s3client.putObject(putObjectRequest);
-        }
-        catch (Exception e){
-            throw new Exception(e);
-        }
+        PutObjectRequest putObjectRequest =
+                new PutObjectRequest(bucketName, fileName, file).withCannedAcl(CannedAccessControlList.PublicRead);
+        s3client.putObject(putObjectRequest);
     }
 
 
@@ -83,27 +78,18 @@ public class S3Service {
 
     public String createFile(MultipartFile multipartFile, String name) throws Exception{
 
-        try {
-            File file = convertMultiPartToFile(multipartFile);
-            String fileName = generateFileName(name);
-            String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
-            uploadFileTos3bucket(fileName, file);
-            file.delete();
-            return fileUrl;
-        } catch (Exception e) {
-            throw new Exception(e);
-        }
+        File file = convertMultiPartToFile(multipartFile);
+        String fileName = generateFileName(name);
+        String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
+        uploadFileTos3bucket(fileName, file);
+        boolean isDeleted = file.delete();
+        return fileUrl;
     }
 
     public String retrieveFile(String fileId) throws Exception{
-        try{
-            String fileName = s3client.getObject(this.bucketName, fileId).getKey();
-            String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
-            return fileUrl;
-        }
-        catch (Exception e){
-            throw new Exception(e);
-        }
+        String fileName = s3client.getObject(this.bucketName, fileId).getKey();
+        String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
+        return fileUrl;
     }
 
     public List<String> listFiles() throws Exception{

@@ -1,17 +1,17 @@
 package jupiter.backend.shop;
 
-
-import jupiter.backend.address.Address;
-import jupiter.backend.dish.Dish;
-import jupiter.backend.lsyexception.LsyException;
+import jupiter.backend.core.CoreService;
+import jupiter.backend.exception.NoExistsEntityFromIdException;
+import jupiter.backend.user.User;
 import jupiter.backend.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 @Service
-public class ShopService {
+public class ShopService extends CoreService{
 
     @Autowired
     ShopRepository shopRepository;
@@ -19,145 +19,83 @@ public class ShopService {
     @Autowired
     UserRepository userRepository;
 
-    public Shop createShop(Shop newShop, String loginName) throws LsyException{
-        Shop Shop = shopRepository.findShopByName(newShop.getName());
-        if(Shop != null){
-            throw new LsyException("shop name existed");
-        }
-        try{
-            // convert all username into id
-            Set<String> userIdSet = new HashSet<>();
-            newShop.getOwners().add(loginName);
-            for(String username: newShop.getOwners()){
-                String convertId = userRepository.findUserByUsernameAndRole(username, "owner").getId();
-                if (convertId != null) userIdSet.add(convertId);
-            }
-            Shop savingShop = new Shop();
-            savingShop.setName(newShop.getName());
-            savingShop.setDesc(newShop.getDesc());
-            savingShop.setImgUrl(newShop.getImgUrl());
-            savingShop.setCategories(newShop.getCategories());
-            savingShop.setAddress(newShop.getAddress());
-            savingShop.setDishes(newShop.getDishes());
-            savingShop.setOwners(new ArrayList<>(userIdSet));
-            return shopRepository.save(savingShop);
-        }
-        catch(Exception e){
-            throw e;
-        }
+    @Autowired
+    CoreService coreService;
+
+    public Shop createShop(Shop newShop, String loginUserId){
+        Shop savingShop = new Shop(
+                newShop.getShopName(),
+                newShop.getDesc(),
+                newShop.getImgUrl(),
+                newShop.getCategories(),
+                loginUserId,
+                newShop.getAddress()
+        );
+        return shopRepository.save(savingShop);
     }
 
-    public Shop retrieveShop(String shopId) throws LsyException{
-        Shop shop = shopRepository.findBy_id(shopId);
-        if(shop == null){
-            throw new LsyException("no such shop");
-        }
-        try{
-            List<String> ownersName = new ArrayList<>();
-            for(String ownersId: shop.getOwners()){
-                ownersName.add(userRepository.findBy_IdSafely(ownersId).getUsername());
-            }
-            shop.setOwners(ownersName);
-            return shop;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Optional<Shop> retrieveShop(String shopId){
+        return shopRepository.findShopById(shopId);
     }
 
-    public Shop retrieveShop(String shopId, String ownerId) throws LsyException{
-        Shop shop = shopRepository.findBy_idAndOwnerId(shopId, ownerId);
-        if(shop == null){
-            throw new LsyException("no such shop under this login owner");
-        }
-        try{
-            List<String> ownersName = new ArrayList<>();
-            for(String ownersId: shop.getOwners()){
-                ownersName.add(userRepository.findBy_IdSafely(ownersId).getUsername());
-            }
-            shop.setOwners(ownersName);
-            return shop;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Optional<Shop> retrieveShopUnderOwner(String shopId,
+                                                 String ownerId){
+        return shopRepository.findShopByIdAndOwnerId(shopId, ownerId);
     }
 
-    public List<Shop> listShop() throws Exception{
-        try{
-            List<Shop> shoplist = shopRepository.findAll();
-            for(Shop shop : shoplist){
-                List<String> ownersName = new ArrayList<>();
-                for(String ownersId: shop.getOwners()){
-                    ownersName.add(userRepository.findBy_IdSafely(ownersId).getUsername());
-                }
-                shop.setOwners(ownersName);
-            }
-            return shoplist;
-        }
-        catch (Exception e){
-            throw new Exception(e);
-        }
+    public List<Shop> listShop(){
+        return shopRepository.findAll();
     }
 
-    public List<Shop> listShop(String ownerId) throws Exception{
-        try{
-            List<Shop> shoplist = shopRepository.findAllByOwner(ownerId);
-            for(Shop shop : shoplist){
-                List<String> ownersName = new ArrayList<>();
-                for(String ownersId: shop.getOwners()){
-                    ownersName.add(userRepository.findBy_IdSafely(ownersId).getUsername());
-                }
-                shop.setOwners(ownersName);
-            }
-            return shoplist;
-        }
-        catch (Exception e){
-            throw new Exception(e);
-        }
+    public List<Shop> listShopUnderOwner(String ownerId){
+        return shopRepository.findShopsByOwnerId(ownerId);
     }
 
-    public Shop updateShop(String shopId, String ownerId, Shop updateShop) throws LsyException{
-        Shop newShop = shopRepository.findBy_idAndOwnerId(shopId, ownerId);
-        if(newShop == null){
-            throw new LsyException("no such shop under the login owner");
-        }
-        else if(shopRepository.findShopByName(updateShop.getName()) != null
-        && !shopRepository.findShopByName(updateShop.getName()).get_id().equals(shopId)){
-            throw new LsyException("new name existed");
-        }
-        try{
-            // convert all username into id
-            Set<String> userIdSet = new HashSet<>();
-            for(String username: updateShop.getOwners()){
-                String convertId = userRepository.findUserByUsernameAndRole(username, "owner").getId();
-                if (convertId != null) userIdSet.add(convertId);
-            }
-            newShop.setName(updateShop.getName());
-            newShop.setDesc(updateShop.getDesc());
-            newShop.setImgUrl(updateShop.getImgUrl());
-            newShop.setCategories(updateShop.getCategories());
-            newShop.setOwners(new ArrayList<>(userIdSet));
-            newShop.setAddress(updateShop.getAddress());
-            return shopRepository.save(newShop);
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Shop updateShop(Shop updatingShop, String loginUserId){
+        Shop updatedShop = shopRepository.findShopById(updatingShop.getId()).orElse(null);
+        assert updatedShop != null;
+        updatedShop.setShopName(updatingShop.getShopName());
+        updatedShop.setDesc(updatingShop.getDesc());
+        updatedShop.setImgUrl(updatingShop.getImgUrl());
+        updatedShop.setCategories(updatingShop.getCategories());
+        updatedShop.setOwnerId(loginUserId);
+        updatedShop.setAddress(updatingShop.getAddress());
+
+        return shopRepository.save(updatedShop);
     }
 
-    public Boolean deleteShop(String shopId, String ownerId) throws Exception{
-        Shop shop = shopRepository.findBy_idAndOwnerId(shopId, ownerId);
-        if(shop == null){
-            throw new LsyException("no such shop under the login owner");
-        }
-        try{
-            shopRepository.deleteById(shopId);
-            return shopRepository.findShopByName(shopId) == null;
-        }
-        catch(Exception e){
-            throw new Exception(e);
-        }
+
+    public Boolean existsByShopName(String shopName){
+        return shopRepository.existsByShopName(shopName);
     }
 
+    public Boolean existsById(String shopId){
+        return shopRepository.existsById(shopId);
+    }
+
+    public Boolean otherExistsByShopName(String shopId, String shopName){
+        Shop foundShopById = shopRepository.findShopById(shopId).orElse(null);
+        Shop foundShopByShopName
+                = shopRepository.findShopByShopName(shopName).orElse(null);
+        if(foundShopById == null && foundShopByShopName != null){
+            return true;
+        }
+        else if(foundShopByShopName != null){
+            return !foundShopById.getId().equals(foundShopByShopName.getId());
+        }
+        else return false;
+    }
+
+    public Optional<Shop> findShopByIdAndOwnerId(String shopId, String ownerId){
+        return shopRepository.findShopByIdAndOwnerId(shopId, ownerId);
+    }
+
+    public Boolean deleteShop(String shopId){
+        shopRepository.deleteById(shopId);
+        return !shopRepository.existsById(shopId);
+    }
+
+    public Boolean existsByIdAndOwnerId(String shopId, String ownerId){
+        return shopRepository.existsByIdAndOwnerId(shopId, ownerId);
+    }
 }
