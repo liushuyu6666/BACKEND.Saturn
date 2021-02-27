@@ -1,103 +1,202 @@
-### JWT
-1. jwt contains username and role for convenience
+## Resources
 
+### Document
 
-### controller
-#### JwtController:
-1. verifyAndParseToken: token
-   - verify token
-   - parse the information contained in token
-   - anyone can do this
-2. checkProfile: token
-   - verify token
-   - find the login user info without password
-3. login: loginRequestBody
-   - authentication
+#### User
 
-#### UserController:
-1. createUser: User
-   - create user if role is owner or customer
-   - if role = admin, block it.
-   - API: register
-2. retrieveUserById: token, userId
-   - design for admin to check
-   - same as retrieveUser, but just need userId
-   - password is hidden
-   - for users who just want to check his own profile, by using checkProfile in JwtCont
-3. retrieveUser: token, username, role
-   - design for admin to check detail information
-   - retrieve one user by its name and role
-   - password is hidden
-   - need to check the token, only the role=admin could retrieve user
-   - for users who just want to check his own profile, by using checkProfile in JwtController
-4. listUser: token,
-   - list all users whose role=customer or role=owner
-   - need to check the token, only the role=admin could retrieve user
-5. updateUser: token
-   - verify token
-   - for all customer and owner
-   - password can be changed
-   - find the user info
-   - update and save
+1. **`id`**: <u>String</u>
 
-#### ShopController:
-1. createShop: token, shop
-   - verify token to confirm that the role=owner
-   - since username is added from the frontend, in the backend it need to be convert into _id.
-   - check if login's _id is in the ownersList, if not, add it automatically
-2. retrieveShop: token, shopId
-   - check token, if role = customer or admin, no permission need
-   - check token, if role = owner, only could check its own shop
-   - ownersId need to be convert to ownersName
-3. listShop: token,
-   - check token, if role = customer or admin, no permission need
-   - check token, if role = owner, only could check its own shop
-   - ownersId need to be convert to ownersName
-4. updateShop: token, shopId
-   - verify token to confirm that the role=owner
-   - get the username
-   - modification, even the owner can be changed
-   - notice: if delete all owners, the shop can't be modified, so from the front end, this action need to be restricted
-5. deleteShop: token, shopId
-   - verify token to confirm that the role=owner
-   - get the username
-   - delete
+   - `@Id` auto-generated
 
-#### DishController:
-1. createDish: token, shopId, dish
-   - verify token to confirm that the role=owner
-   - verify the authorization of the owner under this shop
-   - create it
-2. retrieveDish: token, shopId, dishId
-   - if role=owner authorization is needed, if role = customer or admin, needn't to check
-3. listDish: token, shopId
-   - verify token to confirm that the role=owner
-   - get the username and shopId
-   - list it
-4. updateDish: token, shopId, dishId, newDish
-   - verify token to confirm that the role=owner
-   - get the username, shopId and dishId
-   - update
-5. deleteDish: token, shopId, dishId
-   - verify token to confirm that the role=owner
-   - get the username, shopId and dishId
-   - delete it
+2. **`username`**: <u>String</u>,
 
-#### Review:
-1. createReview: token, shopId, dishId, Review
-   - verify token to confirm that the role=customer
-   - get the orderedList to check if it contains the dishId
-   - create
-2. listReviewUnderDish:
-   - get shopId and dishId
-   - don't need to check token
+   - `@NotBlank`
 
-#### Order:
-1. createOrder: token
-   - verify token to confirm that the role=customer
-   - create
-   - notice: can't make sure that the shopId and dishId are existed or valid, need to check when use.
-2. listOrderDetail: token
-   - verify token to confirm that the role=customer
-   - list Order under this customer
+   - `@Size(max=50)`
+
+3. **`password`**: <u>String</u>
+
+   - `@NotBlank`
+   - `@Size(max=100)`
+
+4. **`email`**: <u>String</u>
+
+   - `@Size(max=100)`
+   - `@Email`
+
+5. **`role`**: <u>set<Role></u>
+
+   -  `@DBRef`
+
+6. **`createAt`**: <u>Date</u>
+
+   - `@CreatedDate`
+
+7. **`modifiedAt`**: <u>Date</u>
+
+   - `@LastModifiedDate`
+
+#### Shop
+
+1. **`id`**: <u>String</u>
+
+   - `@Id` auto-generated
+
+2. **`name`**: <u>String</u>
+
+   - `@NotBlank`
+
+   - `@Size(max=50)`
+
+3. **`desc`**: <u>String</u>, description of the shop
+
+   - `@Size(max=100)`
+
+4. **`imgUrl`**: <u>String</u>, image URL in S3
+
+5. **`categories`**: <u>set<String></u>
+
+   - manual reference of  `ETaxonomy`
+
+6. **`owners`**: <u>set<String></u>
+
+   - manual reference of `User`
+
+7. **`address`**: <u>Object</u>
+
+   1. **`country`**: <u>String</u>
+   2. **`city`**: <u>String</u>
+   3. **`street`**: <u>String</u>
+
+8. **`createAt`**: <u>Date</u>, auto-generate
+
+9. **`modifiedAt`**: <u>Date</u>, auto-update
+
+#### **Dish**
+
+1. **`id`**: <u>String</u>, generate by time
+2. **`shopId`**: <u>String</u>
+3. **`name`**: <u>String</u>
+4. **`imgUrl`**: <u>String</u>, name of image start with dish
+5. **`desc`**: <u>String</u>, description
+6. **`category`**: <u>set<String></u>
+7. **`top3Reviews`**: <u>list<ShortReview></u>
+8. **`price`**: <u>Float</u>
+9. **`createAt`**: <u>Date</u>, auto-generate
+10. **`modifiedAt`**: <u>Date</u>, auto-update
+
+#### Review
+
+1. **`id`**: auto-generated
+2. **`userId`**: <u>String</u>
+3. **`dishId`**: <u>String</u>
+4. **`star`**: <u>Integer</u>
+5. **`content`**: <u>String</u>
+6. **`createAt`**: <u>Date</u>, auto-generate
+7. **`modifiedAt`**: <u>Date</u>, auto-update
+
+#### Order
+
+1. **`id`**: `@Id` auto-generated
+2. **`userId`**: <u>String</u>
+3. **`createAt`**: <u>Date</u>, auto-generate
+4. **`orderDetailList`**: <u>Array</u>, each order can cross shop
+   1. **`shopId`**: <u>String</u>
+   2. **`DishIdList`**: <u>Array</u>, ordered dishes' IDs
+
+#### Role
+
+1. `id`: auto-generated
+2. `name`: `<u>ERole</u>`
+
+### Other entities
+
+#### `ERole`
+
+an `enum` class contains:
+
+- `ROLE_CUSTOMER`
+- `ROLE_OWNER`
+- `ROLE_ADMIN`
+
+#### `ETaxonomy`
+
+an `enum` class contains:
+
+- Fast Food
+- Breakfast and Brunch
+- American
+- Mexican
+- Chinese
+- Japanese
+- Italian
+- Healthy
+- Asian
+- Indian
+- Thai
+- Taiwanese
+- Alcohol
+- Halal
+- Bakery
+- Comfort Food
+- Middle Eastern
+- Pizza
+- Turkish
+- Korean
+- Deli
+- German
+- Desserts
+- Vegan
+
+## System sketch
+
+### security, authentication and authorization
+
+#### filter chain
+
+- `FilterChain`: `interface`
+
+## Account
+
+### user accounts
+
+- `liushuyu`: ["customer", "admin", "owner"]
+- `customer`: ["customer"]
+- `admin`: ["admin"]
+- `owner`: ["owner"]
+- `yeager`: ["customer", "admin"]
+- `mikasa`: ["customer", "owner"]
+- `armin`: ["admin", "owner"]
+
+## API
+
+- http://javadox.com/io.jsonwebtoken/jjwt/0.4/io/jsonwebtoken/JwtParser.html#parseClaimsJwt-java.lang.String-)
+
+## Files
+
+### jwt
+
+#### JWT: service
+
+|                 | `verifyAndParseToken`                                        | `checkProfile` | `login`            |
+| --------------- | ------------------------------------------------------------ | -------------- | ------------------ |
+| HTTP method     | GET                                                          | GET            | POST               |
+| API             | /v1/token                                                    | /v1/profile    | /v1/login          |
+| `RequestHeader` | `token`                                                      | `token`        | -                  |
+| `RequestBody`   | -                                                            | -              | `loginRequestBody` |
+| `PathVariable`  | -                                                            | -              | -                  |
+| return          | if parse token successfully return `UserDetail`, else return 401 |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+|                 |                                                              |                |                    |
+
+### security
+
+#### WebSecurityConfig
 
