@@ -12,12 +12,6 @@ public class Address {
 
     private String street;
 
-    @CreatedDate
-    private DateTime createAt;
-
-    @LastModifiedDate
-    private DateTime modifiedAt;
-
     public Address() {
     }
 

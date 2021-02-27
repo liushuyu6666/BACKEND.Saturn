@@ -1,14 +1,10 @@
 package jupiter.backend.dish;
 
-import com.amazonaws.services.dynamodbv2.xspec.L;
-import jupiter.backend.lsyexception.LsyException;
-import jupiter.backend.shop.Shop;
-import jupiter.backend.shop.ShopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DishService {
@@ -16,170 +12,77 @@ public class DishService {
     @Autowired
     DishRepository dishRepository;
 
-    @Autowired
-    ShopRepository shopRepository;
-
-    public Dish createDish(String shopId, String ownerId, Dish newDish) throws LsyException{
-        Shop shop = shopRepository.findBy_idAndOwnerId(shopId, ownerId);
-        Shop testDish = shopRepository.findShopBy_idAndDishName(shopId, newDish.getName());
-        if(shop == null){
-            throw new LsyException("no such shop under this owner");
-        }
-        if(testDish != null){
-            throw new LsyException("dish name existed");
-        }
-        try{
-            Dish dish = new Dish();
-            dish.set_id();
-            dish.setName(newDish.getName());
-            dish.setImgUrl(newDish.getImgUrl());
-            dish.setDesc(newDish.getDesc());
-            dish.setCategory(newDish.getCategory());
-            dish.setPrice(newDish.getPrice());
-            dish.setReview(new ArrayList<>());
-            dish.setModifiedAt();
-            dishRepository.createDish(shopId, dish);
-            return dish;
-        }
-        catch(Exception e){
-            throw e;
-        }
+    public Dish createDish(Dish newDish, String ownerId){
+        Dish savingDish = new Dish(
+                newDish.getShopId(),
+                ownerId,
+                newDish.getName(),
+                newDish.getImgUrl(),
+                newDish.getDesc(),
+                newDish.getCategories(),
+                newDish.getPrice()
+        );
+        return dishRepository.save(savingDish);
     }
 
-//    public Dish createDish(String shopId, Dish newDish) throws LsyException{
-//        Shop shop = shopRepository.findBy_id(shopId);
-//        Shop testDish = shopRepository.findShopBy_idAndDishName(shopId, newDish.getName());
-//        if(shop == null){
-//            throw new LsyException("no such shop");
-//        }
-//        if(testDish != null){
-//            throw new LsyException("dish name existed");
-//        }
-//        try{
-//            Dish dish = new Dish();
-//            dish.set_id();
-//            dish.setName(newDish.getName());
-//            dish.setImgUrl(newDish.getImgUrl());
-//            dish.setDesc(newDish.getDesc());
-//            dish.setCategory(newDish.getCategory());
-//            dish.setPrice(newDish.getPrice());
-//            dish.setReview(newDish.getReview());
-//            dish.setModifiedAt();
-//            shop.getDishes().add(dish);
-//            shopRepository.save(shop);
-//            return dish;
-//        }
-//        catch(Exception e){
-//            throw e;
-//        }
-//    }
-
-    public Dish retrieveDish(String shopId, String dishId) throws LsyException{
-        Shop findShop = shopRepository.findShopBy_idAndDish_id(shopId, dishId);
-        if(findShop == null){
-            throw new LsyException("no such shop or dish");
-        }
-        try{
-            Dish findDish = findShop
-                    .getDishes()
-                    .stream()
-                    .filter(dish -> dish
-                            .get_id()
-                            .equals(dishId))
-                    .findFirst()
-                    .orElse(null);
-            return findDish;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Boolean existsById(String dishId){
+        return dishRepository.existsById(dishId);
     }
 
-    public Dish retrieveDish(String shopId, String dishId, String ownerId) throws LsyException{
-        Shop findShop = shopRepository.findShopBy_idDish_idAndOwnerId(shopId, dishId, ownerId);
-        if(findShop == null){
-            throw new LsyException("no such shop or dish under the login owner");
-        }
-        try{
-            Dish findDish = findShop
-                    .getDishes()
-                    .stream()
-                    .filter(dish -> dish
-                            .get_id()
-                            .equals(dishId))
-                    .findFirst()
-                    .orElse(null);
-            return findDish;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Boolean existsByShopIdAndName(String shopId, String dishName){
+        return  dishRepository.existsByShopIdAndName(shopId, dishName);
     }
 
-    public List<Dish> listDishes(String shopId) throws LsyException{
-        Shop shop = shopRepository.findBy_id(shopId);
-        if(shop == null){
-            throw new LsyException("no such shop");
-        }
-        try{
-            List<Dish> dishes = shop.getDishes();
-            return dishes;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Boolean existsByIdAndShopId(String dishId, String shopId){
+        return dishRepository.existsByIdAndShopId(dishId, shopId);
     }
 
-    public List<Dish> listDishes(String shopId, String ownerId) throws LsyException{
-        Shop shop = shopRepository.findBy_idAndOwnerId(shopId, ownerId);
-        if(shop == null){
-            throw new LsyException("no such shop under this login owner");
-        }
-        try{
-            List<Dish> dishes = shop.getDishes();
-            return dishes;
-        }
-        catch (Exception e){
-            throw e;
-        }
+    public Dish findByShopIdAndId(String shopId, String dishId){
+        return dishRepository.findByShopIdAndId(shopId, dishId).orElse(null);
     }
 
-    public Dish updateDish(String shopId, String ownerId, Dish dish) throws LsyException{
-        Shop shop = shopRepository.findShopBy_idDish_idAndOwnerId(shopId, dish.get_id(), ownerId);
-        Dish duplicateNameDish = dishRepository.findDishByName(shopId, dish.getName());
-        if(shop != null){
-            try{
-                if(duplicateNameDish == null ||
-                        duplicateNameDish.get_id().equals(dish.get_id())){
-                    return dishRepository.updateDish(shopId, dish);
-                }
-                else{
-                    throw new LsyException("new dish name existed in this shop");
-                }
-            }
-            catch(Exception e){
-                throw e;
-            }
-        }
-        else{
-            throw new LsyException("no such shop or dish under this login owner");
-        }
+    public List<Dish> listDishes(String shopId){
+        return dishRepository.findByShopId(shopId);
     }
 
-    public boolean deleteDish(String shopId, String dishId, String ownerId) throws LsyException{
-        Shop shop = shopRepository.findShopBy_idDish_idAndOwnerId(shopId, dishId, ownerId);
-        if(shop == null){
-            throw new LsyException("no such shop or dish under this login owner");
+    public Optional<Dish> findById(String dishId){
+        return dishRepository.findById(dishId);
+    }
+
+    public Boolean existsByIdAndShopIdAndOwnerId(String dishId, String shopId, String ownerId){
+        return dishRepository.existsByIdAndShopIdAndOwnerId(dishId, shopId, ownerId);
+    }
+
+    public Boolean otherExistsByDishName(String shopId, String dishId, String dishName){
+        Dish foundDishById = dishRepository.findByShopIdAndId(shopId, dishId).orElse(null);
+        Dish foundDishByName = dishRepository.findByShopIdAndName(shopId, dishName).orElse(null);
+        if(foundDishById == null && foundDishByName != null){
+            return true;
         }
-        else{
-            try{
-                dishRepository.deleteDish(shopId, dishId);
-                return true;
-            }
-            catch(Exception e){
-                throw e;
-            }
+        else if(foundDishByName != null){
+            return !foundDishById.getId().equals(foundDishByName.getId());
         }
+        else return false;
+    }
+
+    public Dish updateDish(Dish updatingDish){
+        Dish updatedDish = dishRepository.findById(updatingDish.getId()).orElse(null);
+        updatedDish.setName(updatingDish.getName());
+        updatedDish.setImgUrl(updatingDish.getImgUrl());
+        updatedDish.setDesc(updatingDish.getDesc());
+        updatedDish.setCategories(updatingDish.getCategories());
+        updatedDish.setPrice(updatingDish.getPrice());
+
+        return dishRepository.save(updatedDish);
+    }
+
+    public Optional<Dish> findByIdAndOwnerId(String id, String ownerId){
+        return dishRepository.findByIdAndOwnerId(id, ownerId);
+    }
+
+    public Boolean deleteDish(String dishId){
+        dishRepository.deleteById(dishId);
+        return !dishRepository.existsById(dishId);
     }
 
 }

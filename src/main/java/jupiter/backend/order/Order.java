@@ -1,127 +1,42 @@
 package jupiter.backend.order;
 
-import jupiter.backend.dish.Dish;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotBlank;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Set;
-
-class DishInfo{
-
-    private String dishId;
-
-    private String dishName;
-
-    private Float price;
-
-    private Integer number;
-
-    public DishInfo() {
-    }
-
-    public String getDishId() {
-        return dishId;
-    }
-
-    public void setDishId(String dishId) {
-        this.dishId = dishId;
-    }
-
-    public String getDishName() {
-        return dishName;
-    }
-
-    public void setDishName(String dishName) {
-        this.dishName = dishName;
-    }
-
-    public Float getPrice() {
-        return price;
-    }
-
-    public void setPrice(Float price) {
-        this.price = price;
-    }
-
-    public Integer getNumber() {
-        return number;
-    }
-
-    public void setNumber(Integer number) {
-        this.number = number;
-    }
-}
-
-class OrderDetail {
-
-    private Date createAt;
-
-    private String shopId;
-
-    private String shopName;
-
-    private List<DishInfo> dishInfoList;
-
-    public OrderDetail() {
-    }
-
-    public Date getCreateAt() {
-        return createAt;
-    }
-
-    public void setCreateAt() {
-        Date now = new Date();
-        this.createAt = now;
-    }
-
-    public String getShopId() {
-        return shopId;
-    }
-
-    public void setShopId(String shopId) {
-        this.shopId = shopId;
-    }
-
-    public String getShopName() {
-        return shopName;
-    }
-
-    public void setShopName(String shopName) {
-        this.shopName = shopName;
-    }
-
-    public List<DishInfo> getDishInfoList() {
-        return dishInfoList;
-    }
-
-    public void setDishInfoList(List<DishInfo> dishInfoList) {
-        this.dishInfoList = dishInfoList;
-    }
-}
 
 @Document(collection = "order")
 public class Order {
 
-    private String username;
-
     @Id
+    private String id;
+
+    @NotBlank
     private String userId;
 
-    private List<OrderDetail> orderDetailList;
+    private HashMap<String, Integer> dishAmount = new HashMap<>();
+
+    @CreatedDate
+    private Date createAt;
 
     public Order() {
     }
 
-    public String getUsername() {
-        return username;
+    public Order(@NotBlank String userId, HashMap<String, Integer> dishAmount) {
+        this.userId = userId;
+        this.dishAmount = dishAmount;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getUserId() {
@@ -132,34 +47,19 @@ public class Order {
         this.userId = userId;
     }
 
-    public List<OrderDetail> getOrderDetailList() {
-        return orderDetailList;
+    public HashMap<String, Integer> getDishAmount() {
+        return dishAmount;
     }
 
-    public void setOrderDetailList(List<OrderDetail> orderDetailList) {
-        this.orderDetailList = orderDetailList;
+    public void setDishAmount(HashMap<String, Integer> dishAmount) {
+        this.dishAmount = dishAmount;
     }
 
-    //    private String shopId;
-//
-//    private Set<String> dishList;
-//
-//    public Order() {
-//    }
-//
-//    public String getShopId() {
-//        return shopId;
-//    }
-//
-//    public void setShopId(String shopId) {
-//        this.shopId = shopId;
-//    }
-//
-//    public Set<String> getDishList() {
-//        return dishList;
-//    }
-//
-//    public void setDishList(Set<String> dishList) {
-//        this.dishList = dishList;
-//    }
+    public Date getCreateAt() {
+        return createAt;
+    }
+
+    public void setCreateAt(Date createAt) {
+        this.createAt = createAt;
+    }
 }

@@ -6,41 +6,23 @@ import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ShopRepository extends MongoRepository<Shop, String> {
 
-    // for owner to find all shops
-    @Query("{'owners': ?0}")
-    List<Shop> findAllByOwner(String ownerId);
+    Optional<Shop> findShopById(String shopId);
 
-    @Query("{'_id': ?0, 'owners': ?1}")
-    Shop findBy_idAndOwnerId(String shopId, String ownerId);
+    Optional<Shop> findShopByShopName(String shopName);
 
-    // find all shop name
-    @Query(value = "{}", fields = "{'name': 1}")
-    List<HashMap<String, String>> findAllShopName();
+    List<Shop> findAll();
 
-    // find shop by name
-    @Query(value = "{'name': ?0}")
-    Shop findShopByName(String shopName);
+    List<Shop> findShopsByOwnerId(String ownerId);
 
-    // find shop by id
-    @Query(value = "{'_id': ?0}")
-    Shop findBy_id(String id);
+    Optional<Shop> findShopByIdAndOwnerId(String shopId, String ownerId);
 
-    @Query(value = "{'_id': ?0, 'dishes.name': ?1}")
-    Shop findShopBy_idAndDishName(String id, String dishName);
+    Boolean existsByShopName(String shopName);
 
-    @Query(value = "{'_id': ?0, 'dishes._id': ?1, 'owners': ?2}")
-    Shop findShopBy_idDish_idAndOwnerId(String id, String dishId, String ownerId);
-
-    // find a specific dish by shop id and dish id
-    @Query(value = "{'_id': ?0, 'dishes._id': ?1}")
-    Shop findShopBy_idAndDish_id(String id, String dishId);
-
-    @Query(value = "{'_id' : ?0, 'dishes._id': ?1}", fields = "{'dishes': 1}")
-    Shop findDishBy_idAndDish_id(String id, String dishId);
-
+    Boolean existsByIdAndOwnerId(String shopId, String ownerId);
 
 }
