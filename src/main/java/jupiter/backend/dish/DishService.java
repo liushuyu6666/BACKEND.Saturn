@@ -1,6 +1,7 @@
 package jupiter.backend.dish;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,16 +13,24 @@ public class DishService {
     @Autowired
     DishRepository dishRepository;
 
+    @Value("${aws.S3.properties.endpointUrl}")
+    private String endpointUrl;
+
+    @Value("${aws.S3.properties.bucketName}")
+    private String bucketName;
+
     public Dish createDish(Dish newDish, String ownerId){
         Dish savingDish = new Dish(
                 newDish.getShopId(),
                 ownerId,
                 newDish.getName(),
-                newDish.getImgUrl(),
+                null,
                 newDish.getDesc(),
                 newDish.getCategories(),
                 newDish.getPrice()
         );
+        Dish savedDish = dishRepository.save(savingDish);
+        savingDish.setImgUrl(endpointUrl + "/" + bucketName + "/" + savedDish.getId());
         return dishRepository.save(savingDish);
     }
 

@@ -3,6 +3,10 @@ package jupiter.backend.shop;
 import jupiter.backend.core.AuthenticationService;
 import jupiter.backend.dump.shop.DumpShop;
 import jupiter.backend.dump.shop.DumpShopService;
+import jupiter.backend.exception.FailToDeleteDocument;
+import jupiter.backend.exception.IllegalFormat;
+import jupiter.backend.exception.NoSuchDocument;
+import jupiter.backend.exception.RedundantIssueException;
 import jupiter.backend.payload.response.MessageResponse;
 import jupiter.backend.role.ERole;
 import jupiter.backend.role.Role;
@@ -40,14 +44,10 @@ public class ShopController {
             Authentication authentication,
             @RequestBody Shop newShop){
         if(newShop.getShopName().trim().equals("")){
-            return ResponseEntity
-                .badRequest()
-                .body(new MessageResponse("shop's name can't be empty or whitespace"));
+            return IllegalFormat.badRequest("shop's name can't be empty or whitespace");
         }
         if(shopService.existsByShopName(newShop.getShopName())){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("shop's name existed"));
+            return RedundantIssueException.ok("shop's name existed");
         }
         String userId = authenticationService.parseAuthenticationGetId(authentication);
         Shop savedShop = shopService.createShop(newShop, userId);
@@ -64,9 +64,7 @@ public class ShopController {
     ){
         Shop retrievedShop = shopService.retrieveShop(shopId).orElse(null);
         if(retrievedShop == null){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such shop"));
+            return NoSuchDocument.ok("shop");
         }
         ResponseBody responseBody
                 = new ResponseBody(retrievedShop,
@@ -76,6 +74,7 @@ public class ShopController {
     }
 
     @GetMapping("/manage/shops/{shopId}")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
     public ResponseEntity<?> retrieveShopUnderOwner(
             Authentication authentication,
             @PathVariable("shopId") String shopId
@@ -85,11 +84,8 @@ public class ShopController {
                 .retrieveShopUnderOwner(shopId, userId)
                 .orElse(null);
         if(retrievedShop == null){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new
-                        MessageResponse(
-                            String.format("no such shop under user: %s", userId)));
+            return NoSuchDocument
+                    .ok(String.format("no such shop under user: %s", userId));
         }
         ResponseBody responseBody
                 = new ResponseBody(retrievedShop,
@@ -107,6 +103,7 @@ public class ShopController {
     }
 
     @GetMapping("/manage/shops")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
     public ResponseEntity<?> listShopUnderOwner(
             Authentication authentication
     ){
@@ -129,19 +126,13 @@ public class ShopController {
         String userId = authenticationService.parseAuthenticationGetId(authentication);
         Shop targetShop = shopService.findShopByIdAndOwnerId(shopId, userId).orElse(null);
         if(targetShop == null){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such shop under the owner"));
+            return NoSuchDocument.ok("no such shop under the owner");
         }
         if(updatingShop.getShopName().trim().equals("")){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("new shop's name can't be empty or whitespace"));
+            return NoSuchDocument.ok("new shop's name can't be empty or whitespace");
         }
         if(shopService.otherExistsByShopName(shopId, updatingShop.getShopName())){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("new shop's name existed"));
+            return RedundantIssueException.ok("new shop's name existed");
         }
         updatingShop.setId(shopId);
         Shop shop = shopService.updateShop(updatingShop, userId);
@@ -158,12 +149,10 @@ public class ShopController {
         String userId = authenticationService.parseAuthenticationGetId(authentication);
         Shop targetShop = shopService.findShopByIdAndOwnerId(shopId, userId).orElse(null);
         if(targetShop == null){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such shop under the owner"));
+            return NoSuchDocument.ok("no such shop under the owner");
         }
-        DumpShop savedDumpShop = dumpShopService.createDumpShop(targetShop);
         if(shopService.deleteShop(shopId)){
+            DumpShop savedDumpShop = dumpShopService.createDumpShop(targetShop);
             ResponseBody responseBody
                     = new ResponseBody(
                             savedDumpShop,
@@ -171,6 +160,10 @@ public class ShopController {
                     null);
             return ResponseEntity.ok(responseBody);
         }
-        else return ResponseEntity.badRequest().body(new MessageResponse("delete fail"));
+        else return FailToDeleteDocument
+                .ok(String
+                        .format("userId: %s, targetShop: %s", userId, targetShop)
+                );
+
     }
 }

@@ -77,7 +77,6 @@ public class S3Service {
 
 
     public String createFile(MultipartFile multipartFile, String name) throws Exception{
-
         File file = convertMultiPartToFile(multipartFile);
         String fileName = generateFileName(name);
         String fileUrl = endpointUrl + "/" + bucketName + "/" + fileName;
