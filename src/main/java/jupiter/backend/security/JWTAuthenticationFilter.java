@@ -1,16 +1,25 @@
 package jupiter.backend.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jupiter.backend.payload.response.ResponseBody;
+import jupiter.backend.role.Role;
+import jupiter.backend.role.RoleRepository;
 import jupiter.backend.security.constants.SecurityConstants;
 import jupiter.backend.security.jwt.JwtUtils;
 import jupiter.backend.security.userDetails.UserDetailsImpl;
+import jupiter.backend.security.userDetails.UserDetailsServiceImpl;
 import jupiter.backend.user.User;
+import jupiter.backend.user.UserProfile;
+import jupiter.backend.user.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -18,9 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.UUID;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static jupiter.backend.security.constants.SecurityConstants.*;
@@ -34,14 +42,18 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     private SecurityConstants securityConstants;
 
+    private UserRepository userRepository;
+
     public JWTAuthenticationFilter(
             AuthenticationManager authenticationManager,
             JwtUtils jwtUtils,
-            SecurityConstants securityConstants){
+            SecurityConstants securityConstants,
+            UserRepository userRepository){
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.securityConstants = securityConstants;
-        this.setFilterProcessesUrl("/v1/auth/login");
+        this.userRepository = userRepository;
+        this.setFilterProcessesUrl("/v1/jupiter/login");
     }
 
     @Override
@@ -69,6 +81,27 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             FilterChain chain,
                                             Authentication authentication) throws IOException, ServletException{
         String jwt = this.jwtUtils.generateJwtToken(authentication);
-        res.addHeader(securityConstants.headerString, securityConstants.tokenPrefix + jwt);
+        String username = jwtUtils.getUserNameFromJwtToken(jwt);
+        User user = userRepository.findByUsername(username).orElse(null);
+        assert user != null;
+        Set<String> strRoles = new HashSet<>();
+        for(Iterator<Role> it = user.getAuthorities().iterator(); it.hasNext(); ){
+            Role r = it.next();
+            strRoles.add(r.getDesc());
+        }
+        UserProfile userProfile = new UserProfile();
+        userProfile.setUsername(user.getUsername());
+        userProfile.setEmail(user.getEmail());
+        userProfile.setJwt(jwt);
+        userProfile.setRoles(strRoles);
+        ResponseBody responseBody = new ResponseBody(userProfile, "login successfully", null);
+
+        PrintWriter out = res.getWriter();
+        res.setContentType("application/json");
+        res.setCharacterEncoding("UTF-8");
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+        String json = ow.writeValueAsString(responseBody);
+        out.print(json);
+        out.flush();
     }
 }

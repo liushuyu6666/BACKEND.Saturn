@@ -10,10 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @RequestMapping("/v1/jupiter")
 @RestController
@@ -70,8 +67,8 @@ public class OrderController {
             Authentication authentication
     ){
         String userId = authenticationService.parseAuthenticationGetId(authentication);
-        List<Order> orderList = orderService.orderRepository.findAllByUserId(userId);
-        ResponseBody responseBody = new ResponseBody(orderList, "list all order", null);
+        List<OrderDetail> orderDetailList = orderService.listOrders(userId);
+        ResponseBody responseBody = new ResponseBody(orderDetailList, "list all orders", null);
         return ResponseEntity.ok(responseBody);
     }
 

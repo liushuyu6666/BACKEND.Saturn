@@ -5,6 +5,7 @@ import jupiter.backend.exception.NoExistsEntityFromIdException;
 import jupiter.backend.user.User;
 import jupiter.backend.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.InvocationTargetException;
@@ -22,15 +23,23 @@ public class ShopService extends CoreService{
     @Autowired
     CoreService coreService;
 
+    @Value("${aws.S3.properties.endpointUrl}")
+    private String endpointUrl;
+
+    @Value("${aws.S3.properties.bucketName}")
+    private String bucketName;
+
     public Shop createShop(Shop newShop, String loginUserId){
         Shop savingShop = new Shop(
                 newShop.getShopName(),
                 newShop.getDesc(),
-                newShop.getImgUrl(),
+                null,
                 newShop.getCategories(),
                 loginUserId,
                 newShop.getAddress()
         );
+        Shop savedShop = shopRepository.save(savingShop);
+        savingShop.setImgUrl(endpointUrl + "/" + bucketName + "/" + savedShop.getId());
         return shopRepository.save(savingShop);
     }
 
@@ -56,9 +65,9 @@ public class ShopService extends CoreService{
         assert updatedShop != null;
         updatedShop.setShopName(updatingShop.getShopName());
         updatedShop.setDesc(updatingShop.getDesc());
-        updatedShop.setImgUrl(updatingShop.getImgUrl());
+//        updatedShop.setImgUrl(updatingShop.getImgUrl());
         updatedShop.setCategories(updatingShop.getCategories());
-        updatedShop.setOwnerId(loginUserId);
+//        updatedShop.setOwnerId(loginUserId);
         updatedShop.setAddress(updatingShop.getAddress());
 
         return shopRepository.save(updatedShop);

@@ -1,8 +1,10 @@
 package jupiter.backend.security;
 
+import jupiter.backend.role.RoleRepository;
 import jupiter.backend.security.constants.SecurityConstants;
 import jupiter.backend.security.jwt.JwtUtils;
 import jupiter.backend.security.userDetails.UserDetailsServiceImpl;
+import jupiter.backend.user.UserRepository;
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,14 +33,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private SecurityConstants securityConstants;
 
+    private UserRepository userRepository;
+
     public WebSecurityConfig(UserDetailsServiceImpl userDetailsService,
                              AuthEntryPointJwt unauthorizedHandler,
                              JwtUtils jwtUtils,
-                             SecurityConstants securityConstants) {
+                             SecurityConstants securityConstants,
+                             UserRepository userRepository) {
         this.userDetailsService = userDetailsService;
         this.unauthorizedHandler = unauthorizedHandler;
         this.jwtUtils = jwtUtils;
         this.securityConstants = securityConstants;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -75,7 +81,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilter(new JWTAuthenticationFilter(
                         authenticationManager(),
                         new JwtUtils(securityConstants),
-                        securityConstants))
+                        securityConstants,
+                        userRepository))
                 .addFilter(new JWTAuthorizationFilter(
                         authenticationManager(),
                         jwtUtils,

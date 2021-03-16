@@ -3,6 +3,10 @@ package jupiter.backend.dish;
 import jupiter.backend.core.AuthenticationService;
 import jupiter.backend.dump.dish.DumpDish;
 import jupiter.backend.dump.dish.DumpDishService;
+import jupiter.backend.exception.FailToDeleteDocument;
+import jupiter.backend.exception.IllegalFormat;
+import jupiter.backend.exception.NoSuchDocument;
+import jupiter.backend.exception.RedundantIssueException;
 import jupiter.backend.payload.response.MessageResponse;
 import jupiter.backend.payload.response.ResponseBody;
 import jupiter.backend.shop.Shop;
@@ -39,20 +43,14 @@ public class DishController {
             @RequestBody Dish newDish
     ){
         if(newDish.getName().trim().equals("")){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("dish's name can't be empty or whitespace"));
+            return IllegalFormat.badRequest("dish's name can't be empty or whitespace");
         }
         if(dishService.existsByShopIdAndName(newDish.getShopId(), newDish.getName())){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("dish's name existed in this shop"));
+            return RedundantIssueException.ok("dish's name existed in this shop");
         }
         String userId = authenticationService.parseAuthenticationGetId(authentication);
         if(!shopService.existsByIdAndOwnerId(newDish.getShopId(), userId)){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such shop under the user"));
+            return NoSuchDocument.ok("no such shop under the user");
         }
         Dish savedDish = dishService.createDish(newDish, userId);
         ResponseBody responseBody
@@ -73,9 +71,7 @@ public class DishController {
                     .body(new MessageResponse("no such shop"));
         }
         if(!dishService.existsByIdAndShopId(dishId, shopId)){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such dish under this restaurant"));
+            return NoSuchDocument.ok("no such dish under this restaurant");
         }
         Dish dish = dishService.findByShopIdAndId(shopId, dishId);
         ResponseBody responseBody = new ResponseBody(dish, "retrieve it", null);
@@ -87,11 +83,28 @@ public class DishController {
             @PathVariable("shopId") String shopId
     ){
         if(!shopService.existsById(shopId)){
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("no such shop"));
+            return NoSuchDocument.ok("no such shop");
         }
         List<Dish> dishesList = dishService.listDishes(shopId);
+        ResponseBody responseBody
+                = new ResponseBody(dishesList,
+                String.format("list all dishes under shopId %s", shopId),
+                null);
+        return ResponseEntity.ok(responseBody);
+    }
+
+    @GetMapping("/manage/shops/{shopId}/dishes")
+    @PreAuthorize("hasRole('ROLE_OWNER')")
+    public ResponseEntity<?> listDishUnderOwner(
+            Authentication authentication,
+            @PathVariable("shopId") String shopId
+    ){
+        String userId = authenticationService.parseAuthenticationGetId(authentication);
+        Shop targetShop = shopService.findShopByIdAndOwnerId(shopId, userId).orElse(null);
+        if(targetShop == null){
+            return NoSuchDocument.ok("no such shop under this user");
+        }
+        List<Dish> dishesList = dishService.listDishes(targetShop.getId());
         ResponseBody responseBody
                 = new ResponseBody(dishesList,
                 String.format("list all dishes under shopId %s", shopId),
@@ -109,31 +122,19 @@ public class DishController {
         String userId = authenticationService.parseAuthenticationGetId(authentication);
         String shopId = updatingDish.getShopId();
         if(shopId == null){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse(
-                            String.format("shopId can't be empty")
-                    ));
+            return IllegalFormat.badRequest("shopId can't be empty");
         }
         if(!dishService.existsByIdAndShopIdAndOwnerId(dishId, shopId, userId)){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse(
-                        String.format("no such dish",shopId, userId)
-                    ));
+            return NoSuchDocument.ok("no such dish");
         }
         if(updatingDish.getName().trim().equals("")){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse(
-                        String.format("new dish's name can't be empty or whitespace")
-                    ));
+            return IllegalFormat.badRequest("new dish's name can't be empty or whitespace");
         }
         if(dishService.otherExistsByDishName(
                 shopId,
                 dishId,
                 updatingDish.getName())){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse(
-                            String.format("new dish's name existed")
-                    ));
+            return RedundantIssueException.ok("new dish's name existed");
         }
         updatingDish.setId(dishId);
         Dish dish = dishService.updateDish(updatingDish);
@@ -150,11 +151,10 @@ public class DishController {
         String ownerId = authenticationService.parseAuthenticationGetId(authentication);
         Dish targetDish = dishService.findByIdAndOwnerId(dishId, ownerId).orElse(null);
         if(targetDish == null){
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("no such dish under the owner"));
+            return NoSuchDocument.ok("no such dish under the owner");
         }
-        DumpDish savedDumpDish = dumpDishService.createDumpDish(targetDish);
         if(dishService.deleteDish(dishId)){
+            DumpDish savedDumpDish = dumpDishService.createDumpDish(targetDish);
             ResponseBody responseBody
                     = new ResponseBody(
                     savedDumpDish,
@@ -162,6 +162,6 @@ public class DishController {
                     null);
             return ResponseEntity.ok(responseBody);
         }
-        else return ResponseEntity.badRequest().body(new MessageResponse("delete fail"));
+        else return FailToDeleteDocument.ok(String.format("dishId: %s", dishId));
     }
 }

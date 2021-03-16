@@ -11,14 +11,16 @@ public class Role {
 
     private ERole name;
 
+    private String desc;
+
     public Role() {
     }
 
-    public String getid() {
+    public String getId() {
         return id;
     }
 
-    public void setid(String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -28,5 +30,13 @@ public class Role {
 
     public void setName(ERole name) {
         this.name = name;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 }
