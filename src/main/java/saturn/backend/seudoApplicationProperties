@@ -1,0 +1,16 @@
+spring.data.mongodb.uri=mongodb+srv://<username>:<password>@<remoteAddress>/<databaseName>?retryWrites=true&w=majority
+
+jupiter.jwt.token=<anyString>
+jupiter.jwt.expire-in-hours=24
+jupiter.jwt.header_string=Authorization
+jupiter.jwt.token_prefix=Bearer\u0020
+jupiter.login.url=/v1/auth/login
+# aws S3
+aws.S3.properties.endpointUrl=<amazonEndPointUrl>
+aws.S3.properties.accessKey=<accessKey>
+aws.S3.properties.secretKey=<secretKey>
+aws.S3.properties.bucketName=<S3Name>
+aws.S3.properties.region=ca-central-1
+
+# port
+server.port=8080
