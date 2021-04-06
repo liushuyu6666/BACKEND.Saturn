@@ -28,6 +28,7 @@ public class CareerService {
         List<Career> response = new ArrayList<>();
         for(Career c : careerRepository.findAll()){
             Career newCareer = new Career();
+            newCareer.setLink(c.getLink());
             newCareer.setId(c.getId());
             newCareer.setCompanyName(c.getCompanyName());
             newCareer.setPosition(c.getPosition());
