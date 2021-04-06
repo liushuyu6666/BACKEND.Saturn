@@ -58,8 +58,10 @@ public class CareerController {
 
     @GetMapping("/careers")
 //    @PreAuthorize("hasRole('ROLE_CAREER_READ')")
-    public ResponseEntity<?> listShop(){
-        List<Career> listCareer = careerService.listCareer();
+    public ResponseEntity<?> listCareer(
+            @RequestHeader("Authorization") String jwt
+    ){
+        List<Career> listCareer = careerService.listCareer(jwt);
         ResponseBody responseBody
                 = new ResponseBody(listCareer, "list career", null);
         return ResponseEntity.ok(responseBody);

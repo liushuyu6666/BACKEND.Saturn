@@ -1,7 +1,9 @@
 package saturn.backend.career;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import saturn.backend.security.jwt.JwtUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,9 @@ public class CareerService {
 
     @Autowired
     CareerRepository careerRepository;
+
+    @Autowired
+    JwtUtils jwtUtils;
 
     public Career createCareer(Career newCareer, String username){
         newCareer.setActive(true);
@@ -24,11 +29,12 @@ public class CareerService {
         return careerRepository.findById(careerId).orElse(null);
     }
 
-    public List<Career> listCareer(){
+    public List<Career> listCareer(String jwt){
         List<Career> response = new ArrayList<>();
         for(Career c : careerRepository.findAll()){
             Career newCareer = new Career();
-            newCareer.setLink(c.getLink());
+            if(jwt.length() > 8 && jwtUtils.validateJwtToken(jwt.substring(7)))
+                newCareer.setLink(c.getLink());
             newCareer.setId(c.getId());
             newCareer.setCompanyName(c.getCompanyName());
             newCareer.setPosition(c.getPosition());
