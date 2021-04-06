@@ -3,6 +3,7 @@ package saturn.backend.career;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,7 +25,19 @@ public class CareerService {
     }
 
     public List<Career> listCareer(){
-        return careerRepository.findAll();
+        List<Career> response = new ArrayList<>();
+        for(Career c : careerRepository.findAll()){
+            Career newCareer = new Career();
+            newCareer.setId(c.getId());
+            newCareer.setCompanyName(c.getCompanyName());
+            newCareer.setPosition(c.getPosition());
+            newCareer.setCity(c.getCity());
+            newCareer.setDeadline(c.getDeadline());
+            newCareer.setActive(c.getActive());
+            newCareer.setApplied(c.getApplied());
+            response.add(newCareer);
+        }
+        return response;
     }
 
     public Career updateCareer(Career updateCareer, String username){
