@@ -1,5 +1,7 @@
 package saturn.backend.career;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import saturn.backend.core.AuthenticationService;
 import saturn.backend.exception.NoSuchDocument;
 import saturn.backend.payload.response.ResponseBody;
@@ -59,11 +61,14 @@ public class CareerController {
     @GetMapping("/careers")
 //    @PreAuthorize("hasRole('ROLE_CAREER_READ')")
     public ResponseEntity<?> listCareer(
-            @RequestHeader("Authorization") String jwt
+            @RequestHeader("Authorization") String jwt,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int pageSize
     ){
-        List<Career> listCareer = careerService.listCareer(jwt);
+        Pageable paging = PageRequest.of(page, pageSize);
+        List<Career> listCareer = careerService.listCareer(jwt, paging);
         ResponseBody responseBody
-                = new ResponseBody(listCareer, "list career", null);
+                = new ResponseBody(listCareer, "list career " + listCareer.size(), null);
         return ResponseEntity.ok(responseBody);
     }
 

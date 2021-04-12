@@ -1,6 +1,7 @@
 package saturn.backend.career;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import saturn.backend.security.jwt.JwtUtils;
@@ -29,9 +30,9 @@ public class CareerService {
         return careerRepository.findById(careerId).orElse(null);
     }
 
-    public List<Career> listCareer(String jwt){
+    public List<Career> listCareer(String jwt, Pageable paging){
         List<Career> response = new ArrayList<>();
-        for(Career c : careerRepository.findAll()){
+        for(Career c : careerRepository.findAll(paging)){
             Career newCareer = new Career();
             if(jwt.length() > 8 && jwtUtils.validateJwtToken(jwt.substring(7)))
                 newCareer.setLink(c.getLink());
