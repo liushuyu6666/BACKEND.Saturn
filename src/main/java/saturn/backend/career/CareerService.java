@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import saturn.backend.manage.Manage;
+import saturn.backend.manage.ManageRepository;
 import saturn.backend.security.jwt.JwtUtils;
 
 import java.util.ArrayList;
@@ -16,6 +18,9 @@ public class CareerService {
     CareerRepository careerRepository;
 
     @Autowired
+    ManageRepository manageRepository;
+
+    @Autowired
     JwtUtils jwtUtils;
 
     public Career createCareer(Career newCareer, String username){
@@ -23,7 +28,14 @@ public class CareerService {
         newCareer.setApplied(false);
         newCareer.setCreateBy(username);
         newCareer.setLastModify(username);
-        return careerRepository.save(newCareer);
+        newCareer = careerRepository.save(newCareer);
+        Integer count = careerRepository.findAll().size();
+        System.out.println(count);
+        Manage careerManage = manageRepository.findByTableName("career").orElse(null);
+        assert careerManage != null;
+        careerManage.setAmountOfEntries(count);
+        manageRepository.save(careerManage);
+        return newCareer;
     }
 
     public Career retrieveCareer(String careerId){
