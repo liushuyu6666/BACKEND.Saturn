@@ -30,7 +30,6 @@ public class CareerService {
         newCareer.setLastModify(username);
         newCareer = careerRepository.save(newCareer);
         Integer count = careerRepository.findAll().size();
-        System.out.println(count);
         Manage careerManage = manageRepository.findByTableName("career").orElse(null);
         assert careerManage != null;
         careerManage.setAmountOfEntries(count);
