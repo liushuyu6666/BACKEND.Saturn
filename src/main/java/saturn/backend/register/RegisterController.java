@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Set;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -27,8 +28,19 @@ public class RegisterController {
     @Autowired
     JwtUtils jwtUtils;
 
+    @PostMapping("/users/{id}")
+    public ResponseEntity<?> addUserRole(
+            @PathVariable("id") String userId,
+            @RequestBody Set<String> strRoles
+    ){
+        User user = userService.addRole(strRoles, userId);
+        ResponseBody responseBody = new ResponseBody(user, "add roles", null);
+        return ResponseEntity.ok(responseBody);
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> registerUser(
+            @Valid @RequestBody RegisterRequest registerRequest) {
         try{
             User newUser = userService.registerUser(registerRequest);
             ResponseBody responseBody = new ResponseBody(newUser, "register successfully", null);
@@ -40,7 +52,8 @@ public class RegisterController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyToken(@RequestHeader("Authorization") String jwt){
+    public ResponseEntity<?> verifyToken(
+            @RequestHeader("Authorization") String jwt){
         String jwtStr = jwt.substring(7);
         Boolean valid = jwtUtils.validateJwtToken(jwtStr);
         ResponseBody responseBody = new ResponseBody(valid, null, null);
@@ -50,6 +63,5 @@ public class RegisterController {
         else{
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
-
     }
 }

@@ -11,7 +11,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -36,6 +38,23 @@ public class UserService {
         User targetUser = userRepository.findById(userId).orElse(null);
         if(targetUser == null) return null;
         else return targetUser.getUsername();
+    }
+
+    public User addRole(Set<String> strRoles, String userId){
+        User targetUser = userRepository.findById(userId).orElse(null);
+        HashMap<String, ERole> rolesSet = new HashMap<>();
+        Set<Role> roles = new HashSet<>();
+        for(Role role : roleRepository.findAll()){
+            rolesSet.put(role.getDesc(), role.getName());
+        }
+        for(String r : strRoles){
+            Role roleManage = roleRepository.findByName(rolesSet.get(r))
+                    .orElseThrow(() -> new RuntimeException("Error: Role(" + r + ") is not found."));
+            roles.add(roleManage);
+        }
+        targetUser.setAuthorities(roles);
+        User newUser = userRepository.save(targetUser);
+        return newUser;
     }
 
     public User registerUser(RegisterRequest registerRequest) throws RedundantIssueException {
