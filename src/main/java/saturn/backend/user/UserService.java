@@ -81,6 +81,18 @@ public class UserService {
                     roles.add(careerRoleManage);
 
                     break;
+                case "languageRead":
+                    Role languageRoleRead = roleRepository.findByName(ERole.ROLE_LANGUAGE_READ)
+                            .orElseThrow(() -> new RuntimeException("Error: Role(languageRoleRead) is not found."));
+                    roles.add(languageRoleRead);
+
+                    break;
+                case "languageWrite":
+                    Role languageRoleWrite = roleRepository.findByName(ERole.ROLE_LANGUAGE_WRITE)
+                            .orElseThrow(() -> new RuntimeException("Error: Role(languageRoleWrite) is not found."));
+                    roles.add(languageRoleWrite);
+
+                    break;
                 default:
                     throw new RuntimeException(String.format("Error: no such role: %s", role));
             }

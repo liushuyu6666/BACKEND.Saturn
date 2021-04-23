@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import saturn.backend.career.Career;
 import saturn.backend.manage.Manage;
 import saturn.backend.manage.ManageRepository;
+import saturn.backend.user.User;
+import saturn.backend.user.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,9 @@ public class LanguageService {
 
     @Autowired
     ManageRepository manageRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     public Language createLanguage(Language newLanguage, String userId){
         newLanguage.setCreateBy(userId);
@@ -33,7 +38,13 @@ public class LanguageService {
     }
 
     public Language retrieveLanguage(String languageId, String userId){
-        return languageRepository.findByIdAndCreateBy(languageId, userId).orElse(null);
+        Language retrievedLanguage = languageRepository.findByIdAndCreateBy(languageId, userId).orElse(null);
+        if(retrievedLanguage != null){
+            User createBy = userRepository.findById(retrievedLanguage.getCreateBy()).orElse(null);
+            String username = (createBy != null)? (createBy.getUsername()):(null);
+            retrievedLanguage.setCreateBy(username);
+        }
+        return retrievedLanguage;
     }
 
     public List<Language> listLanguage(Pageable paging){
@@ -41,9 +52,13 @@ public class LanguageService {
         for(Language l : languageRepository.findAll(paging)){
             if(l.getActive()){
                 Language newLanguage = new Language();
+                newLanguage.setId(l.getId());
                 newLanguage.setKeywords(l.getKeywords());
                 newLanguage.setContent(l.getContent());
-                newLanguage.setCreateBy(l.getCreateBy());
+//                newLanguage.setCreateBy(l.getCreateBy());
+                User createBy = userRepository.findById(l.getCreateBy()).orElse(null);
+                String username = (createBy != null)? (createBy.getUsername()):(null);
+                newLanguage.setCreateBy(username);
                 newLanguage.setModifiedAt(l.getModifiedAt());
                 response.add(newLanguage);
             }
@@ -51,8 +66,8 @@ public class LanguageService {
         return response;
     }
 
-    public Language updateLanguage(Language updateLanguage, String username){
-        Language targetLanguage = languageRepository.findById(updateLanguage.getId()).orElse(null);
+    public Language updateLanguage(Language updateLanguage, String userId){
+        Language targetLanguage = languageRepository.findByIdAndCreateBy(updateLanguage.getId(), userId).orElse(null);
         if(targetLanguage != null){
             targetLanguage.setKeywords(updateLanguage.getKeywords());
             targetLanguage.setContent(updateLanguage.getContent());
