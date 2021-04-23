@@ -63,12 +63,14 @@ public class CareerController {
     public ResponseEntity<?> listCareer(
             @RequestHeader("Authorization") String jwt,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int pageSize
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "true") boolean isActive,
+            @RequestParam(defaultValue = "false") boolean isApplied
     ){
         Pageable paging = PageRequest.of(page, pageSize);
-        List<Career> listCareer = careerService.listCareer(jwt, paging);
+        List<Career> listCareer = careerService.listCareer(jwt, paging, isActive, isApplied);
         ResponseBody responseBody
-                = new ResponseBody(listCareer, "list career " + listCareer.size(), null);
+                = new ResponseBody(listCareer, "list careers " + listCareer.size(), null);
         return ResponseEntity.ok(responseBody);
     }
 
@@ -126,6 +128,17 @@ public class CareerController {
             return NoSuchDocument.ok("can't apply for this career, no such career");
         }
         ResponseBody responseBody = new ResponseBody(deActiveCareer, "applied for it", null);
+        return ResponseEntity.ok(responseBody);
+    }
+
+    @GetMapping("/careers/count")
+    public ResponseEntity<?> countCareer(
+            @RequestParam(defaultValue = "true") boolean isActive,
+            @RequestParam(defaultValue = "false") boolean isApplied
+    ){
+        Integer count = careerService.countListCareer(isActive, isApplied);
+        ResponseBody responseBody
+                = new ResponseBody(count, "count careers under the criteria: " + count, null);
         return ResponseEntity.ok(responseBody);
     }
 
