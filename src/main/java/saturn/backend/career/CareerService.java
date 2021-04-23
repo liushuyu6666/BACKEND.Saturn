@@ -70,8 +70,8 @@ public class CareerService {
             targetCareer.setLink(updateCareer.getLink());
             targetCareer.setPosition(updateCareer.getPosition());
             targetCareer.setStart(updateCareer.getStart());
-            targetCareer.setActive(targetCareer.getActive());
-            targetCareer.setApplied(targetCareer.getApplied());
+            targetCareer.setActive(updateCareer.getActive());
+            targetCareer.setApplied(updateCareer.getApplied());
             targetCareer = careerRepository.save(targetCareer);
             return targetCareer;
         }

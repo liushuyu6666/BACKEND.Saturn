@@ -132,7 +132,7 @@ public class CareerController {
     }
 
     @GetMapping("/careers/count")
-    public ResponseEntity<?> countCareer(
+    public ResponseEntity<?> countFilteredCareer(
             @RequestParam(defaultValue = "true") boolean isActive,
             @RequestParam(defaultValue = "false") boolean isApplied
     ){
