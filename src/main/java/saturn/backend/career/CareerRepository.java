@@ -9,6 +9,6 @@ import java.util.List;
 @Repository
 public interface CareerRepository extends MongoRepository<Career, String> {
     Integer countById();
-    List<Career> findAllByIsActiveAndIsAppliedOrderByModifiedAt(Boolean isActive, Boolean isApplied);
-    List<Career> findAllByIsActiveAndIsAppliedOrderByModifiedAt(Pageable paging, Boolean isActive, Boolean isApplied);
+    List<Career> findAllByIsActiveAndIsAppliedOrderByModifiedAtDesc(Boolean isActive, Boolean isApplied);
+    List<Career> findAllByIsActiveAndIsAppliedOrderByModifiedAtDesc(Pageable paging, Boolean isActive, Boolean isApplied);
 }

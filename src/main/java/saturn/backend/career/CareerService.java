@@ -43,7 +43,7 @@ public class CareerService {
 
     public List<Career> listCareer(String jwt, Pageable paging, Boolean isActive, Boolean isApplied){
         List<Career> response = new ArrayList<>();
-        for(Career c : careerRepository.findAllByIsActiveAndIsAppliedOrderByModifiedAt(paging, isActive, isApplied)){
+        for(Career c : careerRepository.findAllByIsActiveAndIsAppliedOrderByModifiedAtDesc(paging, isActive, isApplied)){
             Career newCareer = new Career();
             if(jwt.length() > 8 && jwtUtils.validateJwtToken(jwt.substring(7)))
                 newCareer.setLink(c.getLink());
@@ -116,6 +116,6 @@ public class CareerService {
     }
 
     public Integer countListCareer(Boolean isActive, Boolean isApplied){
-        return careerRepository.findAllByIsActiveAndIsAppliedOrderByModifiedAt(isActive, isApplied).size();
+        return careerRepository.findAllByIsActiveAndIsAppliedOrderByModifiedAtDesc(isActive, isApplied).size();
     }
 }
