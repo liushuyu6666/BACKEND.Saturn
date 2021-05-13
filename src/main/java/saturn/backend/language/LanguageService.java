@@ -49,7 +49,7 @@ public class LanguageService {
 
     public List<Language> listLanguage(Pageable paging){
         List<Language> response = new ArrayList<>();
-        for(Language l : languageRepository.findAll(paging)){
+        for(Language l : languageRepository.findAllOrderByModifiedAt(paging)){
             if(l.getActive()){
                 Language newLanguage = new Language();
                 newLanguage.setId(l.getId());
