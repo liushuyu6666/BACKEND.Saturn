@@ -2,7 +2,6 @@ package saturn.backend.career;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import saturn.backend.manage.Manage;
 import saturn.backend.manage.ManageRepository;
