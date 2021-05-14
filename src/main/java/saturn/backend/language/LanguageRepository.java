@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,5 +12,7 @@ import java.util.Optional;
 public interface LanguageRepository extends MongoRepository<Language, String> {
     Optional<Language> findByIdAndCreateBy(String Id, String userId);
 
-    List<Language> findAllOrderByModifiedAt(Pageable paging);
+    List<Language> findAllByOrderByModifiedAtDesc(Pageable pageable);
+
+    List<Language> findAll();
 }
